@@ -5,9 +5,9 @@
  * page. WordPress/ACF overlays these defaults at runtime via
  * useCalculatorContent(). If WP is unreachable, this object is used as-is.
  *
- * ACF field names (snake_case) map 1:1 onto the nested shape below — see
- * mapAcfResponseToContent() in ./useCalculatorContent.js and
- * /wp-acf/acf-field-group.json.
+ * WordPress editors use 9 client-friendly ACF tabs/groups (see
+ * /wp-acf/acf-field-group.json). mapAcfResponseToContent() maps those groups
+ * onto this shape. Defaults below are used when WP is offline.
  * ---------------------------------------------------------------------------
  */
 
