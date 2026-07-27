@@ -583,11 +583,23 @@ export function useCalculatorContent() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!ACF_ENDPOINT) return;
+    // No env → no network request. Fix: create sweet-user-spark-main/.env
+    // with VITE_WP_API_URL + VITE_WP_CALCULATE_PAGE_ID, then restart Vite.
+    if (!ACF_ENDPOINT) {
+      console.warn(
+        "[Calculate] WP fetch skipped — VITE_WP_API_URL is missing.\n" +
+          "Create sweet-user-spark-main/.env then restart npm run dev.\n" +
+          "Expected:\n" +
+          "  VITE_WP_API_URL=https://devwp1.websiteserverhost.biz/ssp-calculator\n" +
+          "  VITE_WP_CALCULATE_PAGE_ID=130",
+      );
+      return;
+    }
 
     let cancelled = false;
 
     async function load() {
+      console.info("[Calculate] Fetching ACF from", ACF_ENDPOINT);
       try {
         const res = await fetch(ACF_ENDPOINT);
         if (!res.ok) throw new Error(`WP REST API responded ${res.status}`);
@@ -599,6 +611,7 @@ export function useCalculatorContent() {
           if (!cancelled) {
             setIsFallback(true);
             setError("Calculate page ACF fields are empty");
+            console.warn("[Calculate] Page loaded but acf is empty — using DEFAULT_CONTENT");
           }
           return;
         }
@@ -607,11 +620,18 @@ export function useCalculatorContent() {
           setContent(mergeContent(mapAcfResponseToContent(acf)));
           setIsFallback(false);
           setError(null);
+          console.info("[Calculate] ACF loaded OK", {
+            pageId: page?.id,
+            slug: page?.slug,
+            acfKeys: Object.keys(acf),
+          });
         }
       } catch (err) {
         if (!cancelled) {
+          const message = err instanceof Error ? err.message : "Failed to load WP content";
           setIsFallback(true);
-          setError(err instanceof Error ? err.message : "Failed to load WP content");
+          setError(message);
+          console.error("[Calculate] ACF fetch failed — using DEFAULT_CONTENT:", message);
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -624,7 +644,7 @@ export function useCalculatorContent() {
     };
   }, []);
 
-  return { content, isLoading, isFallback, error };
+  return { content, isLoading, isFallback, error, endpoint: ACF_ENDPOINT };
 }
 
 export default useCalculatorContent;
