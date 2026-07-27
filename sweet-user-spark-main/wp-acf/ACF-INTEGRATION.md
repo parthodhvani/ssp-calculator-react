@@ -25,15 +25,25 @@ When a visitor types **Gross monthly salary**, the blue **Your entitlement** car
 - Form → Submit button text **and** optional link
 - Your Entitlement → Policy button title, description, **and** link (`/policy-analyser`)
 
-## Import
+## Connect React to this WordPress page
 
-1. Create Page slug `calculate`
-2. Import `acf-field-group.json`
-3. Location = Calculate page · Show in REST API on
-4. Set `VITE_WP_API_URL` on the React app
-
-Endpoint:
+Your live endpoint:
 
 ```
-GET /wp-json/wp/v2/pages?slug=calculate&_fields=id,slug,acf
+https://devwp1.websiteserverhost.biz/ssp-calculator/wp-json/wp/v2/pages/130
 ```
+
+Create `sweet-user-spark-main/.env`:
+
+```
+VITE_WP_API_URL=https://devwp1.websiteserverhost.biz/ssp-calculator
+VITE_WP_CALCULATE_PAGE_ID=130
+```
+
+Then restart the dev server (`npm run dev`).
+
+## Import field group (once)
+
+1. Import `acf-field-group.json`
+2. Attach to Page ID **130** (Calculator page)
+3. Enable **Show in REST API**

@@ -120,12 +120,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  // suppressHydrationWarning: browser extensions (e.g. Grammarly) inject
+  // attributes like data-gr-ext-installed onto <html>/<body> before React
+  // hydrates, which would otherwise spam harmless mismatch warnings.
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {children}
         <Scripts />
       </body>
