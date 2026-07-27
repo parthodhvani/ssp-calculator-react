@@ -1,12 +1,18 @@
 /**
  * entitlement.js
  * ---------------------------------------------------------------------------
- * The maths, isolated from the UI on purpose.
+ * Pure maths — no UI, no hardcoded legal numbers.
  *
- * calculateEntitlement() takes the salary AND a `rules` object (which comes
- * from ACF via useCalculatorContent()) and returns the result. No component
- * code needs to change if the statutory rate ever changes — just update the
- * ACF field.
+ * calculateEntitlement(salary, rules) reads EVERY configurable number from
+ * the `rules` object supplied by ACF via useCalculatorContent():
+ *   rules.year1Percent
+ *   rules.year2Percent
+ *   rules.maxWeeks
+ *   rules.waitingDays
+ *   rules.minWageMonthly
+ *   rules.linkedAbsenceWindowDays
+ *
+ * Change a percentage in WordPress → calculation and display both update.
  * ---------------------------------------------------------------------------
  */
 
@@ -19,15 +25,18 @@ export function calculateEntitlement(grossMonthlySalary, rules) {
   return {
     year1Monthly,
     year2Monthly,
+    // 12 months at year-1 rate + 12 months at year-2 rate (104-week / 2-year window)
     totalOverMaxTerm: year1Monthly * 12 + year2Monthly * 12,
     maxWeeks: rules.maxWeeks,
     waitingDays: rules.waitingDays,
+    minWageMonthly: rules.minWageMonthly,
+    year1Percent: rules.year1Percent,
+    year2Percent: rules.year2Percent,
   };
 }
 
 /**
- * Given a first day of sick leave, returns how many whole weeks have
- * elapsed as of today. Used to show "week X of 104" once a date is entered.
+ * Whole weeks elapsed since first day of sick leave (as of today).
  */
 export function weeksElapsedSince(firstDayIso) {
   if (!firstDayIso) return 0;
@@ -38,10 +47,8 @@ export function weeksElapsedSince(firstDayIso) {
 }
 
 /**
- * Two absences count as one continuous period under Art. 7:629 if the gap
- * between them is shorter than the linked-absence window (statutory: 4
- * weeks / 28 days). Driven by rules.linkedAbsenceWindowDays instead of a
- * magic number.
+ * Two absences count as one continuous period if the gap between them is
+ * shorter than rules.linkedAbsenceWindowDays (statutory default: 28).
  */
 export function isLinkedAbsence(previousLastDayIso, newFirstDayIso, rules) {
   const prev = new Date(previousLastDayIso);

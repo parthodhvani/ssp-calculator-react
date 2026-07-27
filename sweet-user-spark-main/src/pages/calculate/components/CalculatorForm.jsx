@@ -1,7 +1,7 @@
 /**
  * CalculatorForm.jsx — Calculate page
- * The left-hand input form. Fully controlled: all values + setters are
- * passed down from CalculatePage so the parent can compute the live result.
+ * Fully controlled form. Every label, placeholder, hint, default constraint,
+ * and button string comes from `content` (ACF). No hardcoded copy.
  */
 import { CalendarDays, Info, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/shared/FormField";
+import { formatTemplate } from "../content";
 
 export function CalculatorForm({ content, form }) {
   const {
@@ -36,6 +37,18 @@ export function CalculatorForm({ content, form }) {
     linkedAbsenceFlag,
   } = form;
 
+  const calc = content.calculator;
+  const rules = content.rules;
+
+  const linkedDescription = formatTemplate(calc.linkedDescription, {
+    weeks: Math.round(rules.linkedAbsenceWindowDays / 7),
+    maxWeeks: rules.maxWeeks,
+  });
+
+  const linkedFlagMessage = formatTemplate(calc.linkedFlagMessage, {
+    maxWeeks: rules.maxWeeks,
+  });
+
   return (
     <form
       onSubmit={(e) => e.preventDefault()}
@@ -43,22 +56,21 @@ export function CalculatorForm({ content, form }) {
       style={{ boxShadow: "var(--shadow-card)" }}
     >
       <div className="grid gap-5 sm:grid-cols-2">
-        <FormField label="Your name">
-          <Input placeholder="e.g. Jordan Vance" />
+        <FormField label={calc.nameLabel}>
+          <Input placeholder={calc.namePlaceholder} />
         </FormField>
-        <FormField label="Company name" hint="Used to label your result.">
-          <Input placeholder="e.g. Company B.V." />
+        <FormField label={calc.companyLabel} hint={calc.companyHint}>
+          <Input placeholder={calc.companyPlaceholder} />
         </FormField>
 
         <FormField
-          label="Industry / sector"
-          hint="Flags if your sector typically has a CAO above the statutory minimum."
+          label={calc.industryLabel}
+          hint={calc.industryHint}
           className="sm:col-span-2"
         >
-          {/* Options come from the ACF "industries" repeater */}
           <Select>
             <SelectTrigger>
-              <SelectValue placeholder="Select your industry" />
+              <SelectValue placeholder={calc.industryPlaceholder} />
             </SelectTrigger>
             <SelectContent>
               {content.industries.map((i) => (
@@ -70,51 +82,54 @@ export function CalculatorForm({ content, form }) {
           </Select>
         </FormField>
 
-        <FormField label="Employment status" className="sm:col-span-2">
+        <FormField label={calc.statusLabel} className="sm:col-span-2">
           <RadioGroup
             value={status}
             onValueChange={(v) => setStatus(v)}
             className="grid grid-cols-2 gap-2"
           >
-            {[
-              { v: "employee", l: "Employee" },
-              { v: "self", l: "Self-employed" },
-            ].map((o) => (
+            {calc.statusOptions.map((o) => (
               <label
-                key={o.v}
+                key={o.value}
                 className={`flex cursor-pointer items-center justify-center gap-2 rounded-md border px-4 py-2.5 text-sm font-medium transition-colors ${
-                  status === o.v
+                  status === o.value
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border bg-background hover:bg-secondary"
                 }`}
               >
-                <RadioGroupItem value={o.v} className="sr-only" />
-                {o.l}
+                <RadioGroupItem value={o.value} className="sr-only" />
+                {o.label}
               </label>
             ))}
           </RadioGroup>
         </FormField>
 
-        <FormField label="Gross monthly salary (€)">
+        <FormField label={calc.salaryLabel}>
           <Input
+            type="number"
             inputMode="numeric"
-            placeholder="3200"
+            placeholder={calc.salaryPlaceholder}
             value={salary}
-            onChange={(e) => setSalary(e.target.value.replace(/\D/g, ""))}
+            min={calc.salaryMin}
+            max={calc.salaryMax}
+            step={calc.salaryStep}
+            onChange={(e) => setSalary(e.target.value.replace(/[^\d.]/g, ""))}
           />
         </FormField>
-        <FormField label="Contracted hours / week">
+        <FormField label={calc.hoursLabel}>
           <Input
+            type="number"
             inputMode="numeric"
+            placeholder={calc.hoursPlaceholder}
             value={hours}
+            min={calc.hoursMin}
+            max={calc.hoursMax}
+            step={calc.hoursStep}
             onChange={(e) => setHours(e.target.value)}
           />
         </FormField>
 
-        <FormField
-          label="First day of sick leave"
-          hint="We'll work out the week number for you."
-        >
+        <FormField label={calc.firstDayLabel} hint={calc.firstDayHint}>
           <div className="relative">
             <Input
               type="date"
@@ -124,7 +139,7 @@ export function CalculatorForm({ content, form }) {
             <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           </div>
         </FormField>
-        <FormField label="Last day (leave blank if still off)">
+        <FormField label={calc.lastDayLabel}>
           <Input
             type="date"
             value={lastDay}
@@ -135,21 +150,14 @@ export function CalculatorForm({ content, form }) {
         <div className="sm:col-span-2">
           <div className="flex items-start justify-between gap-4 rounded-lg border border-border bg-secondary/40 p-4">
             <div>
-              <p className="text-sm font-medium text-foreground">
-                Linked earlier absence?
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                A new absence within{" "}
-                {Math.round(content.rules.linkedAbsenceWindowDays / 7)} weeks of the
-                last one is legally linked — it counts toward the same{" "}
-                {content.rules.maxWeeks}-week limit.
-              </p>
+              <p className="text-sm font-medium text-foreground">{calc.linkedLabel}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{linkedDescription}</p>
             </div>
             <Switch checked={linked} onCheckedChange={setLinked} />
           </div>
           {linked && (
             <div className="mt-4">
-              <FormField label="Last day of that earlier sick leave">
+              <FormField label={calc.linkedLastDayLabel}>
                 <Input
                   type="date"
                   value={linkedLastDay}
@@ -157,10 +165,7 @@ export function CalculatorForm({ content, form }) {
                 />
               </FormField>
               {linkedAbsenceFlag && (
-                <p className="mt-2 text-xs font-medium text-accent">
-                  These absences are linked — they share one {content.rules.maxWeeks}
-                  -week entitlement.
-                </p>
+                <p className="mt-2 text-xs font-medium text-accent">{linkedFlagMessage}</p>
               )}
             </div>
           )}
@@ -173,7 +178,7 @@ export function CalculatorForm({ content, form }) {
           {content.disclaimer}
         </p>
         <Button type="submit" size="lg" className="gap-2">
-          Calculate my entitlement
+          {calc.submitLabel}
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>

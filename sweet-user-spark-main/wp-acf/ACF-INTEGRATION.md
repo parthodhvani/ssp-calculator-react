@@ -1,121 +1,88 @@
-# Wiring this calculator to WordPress + ACF
+# Wiring the Calculate page to WordPress + ACF
 
-This app was originally a Lovable-generated **TanStack Start** SPA with all
-copy and numbers hardcoded in JSX. It's been refactored into three layers so
-you (the WP dev) never need to touch a `.tsx` file to change content:
+Every editable string and number on the Calculate page lives in ACF on the
+WordPress **Page** with slug `calculate`. React only renders `content`.
 
 ```
-src/config/calculatorContent.ts   ← TypeScript shape of every editable field
-                                     + hardcoded fallback values
-src/hooks/useCalculatorContent.ts ← fetches ACF data over REST, maps it onto
-                                     the shape above, falls back safely
-src/lib/entitlement.ts            ← the actual maths, reading numbers from
-                                     content.rules instead of magic numbers
-src/routes/index.tsx              ← pure UI, reads only from `content`
+src/pages/calculate/content.js              ← DEFAULT_CONTENT fallback shape
+src/pages/calculate/useCalculatorContent.js ← fetches WP page ACF, merges
+src/pages/calculate/entitlement.js          ← maths from content.rules only
+src/pages/calculate/CalculatePage.jsx       ← UI, reads only from `content`
+src/pages/calculate/components/*            ← section components
 ```
 
-If you only remember one thing: **every string/number in the UI now comes
-from one `content` object.** To change anything, change the ACF field, not
-the code.
+**One rule:** to change copy, percentages, labels, or defaults — edit ACF,
+not React.
 
-## 1. WordPress setup (5 steps)
+## 1. WordPress setup
 
-1. Install ACF Pro (6.1+) — it ships with REST API support built in. If
-   you're on the free version, install the **ACF to REST API** plugin.
-2. Go to **Custom Fields → Field Groups → Tools → Import Field Groups** and
-   upload `acf-field-group.json` from this folder. This creates every field
-   used by the calculator with the correct names.
-3. Register an **Options Page** so the content isn't tied to a specific
-   post/page (add to your theme's `functions.php` or a small plugin):
-
-   ```php
-   if (function_exists('acf_add_options_page')) {
-       acf_add_options_page([
-           'page_title' => 'Calculator Settings',
-           'menu_title' => 'Calculator Settings',
-           'menu_slug'  => 'acf-options-calculator-settings',
-           'capability' => 'edit_posts',
-       ]);
-   }
-   ```
-
-   (The field group's `location` rule in the JSON already targets this slug.)
-
-4. Go to **Calculator Settings** in the WP admin sidebar and fill in the
-   fields — hero copy, the 3 stats, the industry list, and importantly the
-   **Calculation rules** tab (year 1 / year 2 percentages, max weeks, waiting
-   days, minimum wage). These are the numbers that change when Dutch law
-   changes — now editable without a code deploy.
-
-5. Confirm the REST endpoint returns data. Visit in a browser:
+1. Install **ACF Pro 6.1+** (REST built-in) or free ACF + **ACF to REST API**.
+2. Create a Page titled **Calculate** with slug **`calculate`**.
+3. **Custom Fields → Tools → Import Field Groups** → upload
+   `acf-field-group.json` from this folder.
+4. Open the imported field group → **Location** → set
+   **Page is equal to Calculate** (re-select the page so ACF stores the page ID).
+5. Confirm **Show in REST API** is enabled on the field group.
+6. Edit the Calculate page and fill in the tabs (Hero, Stats, Calculator form,
+   Calculation rules, Result card, etc.).
+7. Verify the REST response:
 
    ```
-   https://your-wp-site.com/wp-json/acf/v3/options/options
+   https://your-wp-site.com/wp-json/wp/v2/pages?slug=calculate&_fields=id,slug,acf
    ```
 
-   You should see a JSON object with an `"acf"` key containing everything
-   you just filled in.
+   You should see an array with one page whose `acf` object holds the fields.
 
-## 2. Frontend setup (1 step)
-
-Create a `.env` file (or set the env var in your hosting platform) with your
-WordPress URL:
+## 2. Frontend setup
 
 ```
 VITE_WP_API_URL=https://your-wp-site.com
+# optional override (default: calculate)
+# VITE_WP_CALCULATE_SLUG=calculate
 ```
 
-That's it — `useCalculatorContent()` in `src/hooks/useCalculatorContent.ts`
-picks this up automatically, fetches on page load, and merges it over the
-built-in defaults. If the env var is missing or WordPress is unreachable,
-the page silently uses the hardcoded fallback values in
-`calculatorContent.ts` — it never breaks.
+`useCalculatorContent()` fetches on load and merges over `DEFAULT_CONTENT`.
+If the env var is missing, WP is down, or `acf` is empty, the page keeps
+working on fallbacks (`isFallback: true`).
 
-## 3. Field reference
+## 3. Changing sick-pay percentages (no code deploy)
 
-| ACF field name              | Type              | Drives                                   |
-|------------------------------|-------------------|-------------------------------------------|
-| `hero_badge`                 | Text              | Small badge above the H1                  |
-| `hero_title_line1`           | Text              | H1 line 1                                 |
-| `hero_title_highlight`       | Text              | H1 highlighted/underlined phrase          |
-| `hero_title_suffix`          | Text              | H1 trailing text                          |
-| `hero_description`           | Textarea          | Paragraph under the H1                    |
-| `hero_cta_label`              | Text              | "Start calculating" button text           |
-| `stats` (repeater, 3 rows)   | stat_value/label  | The 104 / 70% / €2,437 strip              |
-| `sample_amount`               | Number            | Illustrative €3,200/mo preview card       |
-| `sample_period_label`         | Text              | "Year 1 · Weeks 1–52" caption             |
-| `sample_current_week`         | Number            | Progress bar position in preview card     |
-| `industries` (repeater)      | industry_name     | Options in the "Industry / sector" select |
-| `rules_year1_percent`         | Number            | Year 1 payout % — **the actual maths**    |
-| `rules_year2_percent`         | Number            | Year 2 payout % — **the actual maths**    |
-| `rules_max_weeks`             | Number            | Statutory max weeks (currently 104)       |
-| `rules_waiting_days`          | Number            | Unpaid waiting day(s) at start            |
-| `rules_min_wage_monthly`      | Number            | Statutory minimum wage, shown in hero     |
-| `rules_linked_absence_days`   | Number            | Window (days) that links two absences     |
-| `how_it_works` (repeater, 3) | step_number/title/description | The 3-card "How it works" section |
-| `policy_cta_title`            | Text              | Sidebar CTA heading                       |
-| `policy_cta_description`      | Text              | Sidebar CTA subtext                       |
-| `disclaimer_text`             | Text              | "Illustrative estimate — not legal advice" line |
+In the **Calculation rules** tab set:
 
-## 4. If you're NOT using an Options Page
+| Field | Example | Effect |
+| --- | --- | --- |
+| `rules_year1_percent` | `75` | Year 1 pay = salary × 75%; result title shows 75% |
+| `rules_year2_percent` | `50` | Year 2 pay = salary × 50%; result title shows 50% |
 
-Some setups prefer attaching fields to a normal Page (e.g. the homepage)
-instead of an Options Page. To do that:
+Result titles use `{percent}` placeholders (`year1_result_title` /
+`year2_result_title`) filled from the **same** rules fields — never duplicated.
 
-1. In the field group's `location` rule, change it to target a specific
-   page (ACF UI: "Page is equal to [Homepage]").
-2. In `src/hooks/useCalculatorContent.ts`, change `ACF_ENDPOINT` to:
-   ```
-   `${WP_API_URL}/wp-json/acf/v3/pages/{PAGE_ID}`
-   ```
-3. Everything else (the mapping function, the component) stays the same —
-   the response shape (`{ acf: {...} }`) is identical either way.
+Optional aliases `year1_percentage` / `year2_percentage` are only used if the
+`rules_*` fields are empty.
 
-## 5. What NOT to touch
+## 4. Field → React mapping
 
-- `src/routes/index.tsx` should stay presentation-only — no hardcoded
-  copy/numbers. If you find yourself typing a string directly into that
-  file, it probably belongs in `calculatorContent.ts` + the ACF field group
-  instead.
-- `src/lib/entitlement.ts` is pure calculation logic with no ACF/React
-  dependency — safe to unit test on its own.
+| ACF field | → `content.*` |
+| --- | --- |
+| `hero_*` | `content.hero` |
+| `stats` repeater | `content.stats[]` |
+| `sample_*` | `content.sampleResult` |
+| `industries` | `content.industries[]` |
+| `section_*` | `content.section` |
+| `calculator_salary_*` / `calculator_hours_*` / other `calculator_*` | `content.calculator` |
+| `rules_year1_percent` (or `year1_percentage`) | `content.rules.year1Percent` |
+| `rules_year2_percent` (or `year2_percentage`) | `content.rules.year2Percent` |
+| `rules_max_weeks` | `content.rules.maxWeeks` |
+| `rules_waiting_days` | `content.rules.waitingDays` |
+| `rules_min_wage_monthly` | `content.rules.minWageMonthly` |
+| `rules_linked_absence_days` | `content.rules.linkedAbsenceWindowDays` |
+| `year1_result_title` / `year2_result_title` / `result_*` | `content.result` |
+| `how_it_works_*` / `how_it_works` | `content.howItWorksSection` / `content.howItWorks` |
+| `policy_cta_*` | `content.policyAnalyserCta` |
+| `disclaimer_text` | `content.disclaimer` |
+
+## 5. What NOT to touch for content changes
+
+- Do not hardcode percentages, labels, or defaults in JSX.
+- `entitlement.js` must only read `rules.*` — never magic numbers.
+- Other pages (`contact`, `blog`, `rules`, …) are out of scope for this wiring.

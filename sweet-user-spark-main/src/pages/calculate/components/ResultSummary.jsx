@@ -1,13 +1,29 @@
 /**
  * ResultSummary.jsx — Calculate page
- * Sticky right-hand column: the live entitlement result + the link to the
- * policy analyser tool.
+ * Sticky right-hand column: live entitlement result + policy analyser CTA.
+ *
+ * Percentages shown in titles come from content.rules (same source the maths
+ * uses). Title templates may include `{percent}` — substituted at render time.
  */
 import { ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { StatRow } from "@/components/shared/StatRow";
+import { formatTemplate } from "../content";
 
 export function ResultSummary({ content, estimate }) {
+  const result = content.result;
+  const rules = content.rules;
+
+  const year1Title = formatTemplate(result.year1Title, {
+    percent: rules.year1Percent,
+  });
+  const year2Title = formatTemplate(result.year2Title, {
+    percent: rules.year2Percent,
+  });
+  const waitingDaysValue = formatTemplate(result.waitingDaysValue, {
+    days: rules.waitingDays,
+  });
+
   return (
     <aside className="lg:sticky lg:top-20 lg:self-start">
       <div
@@ -15,33 +31,33 @@ export function ResultSummary({ content, estimate }) {
         style={{ boxShadow: "var(--shadow-elegant)" }}
       >
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-primary-foreground/60">
-          Your entitlement
+          {result.kicker}
         </p>
         <p className="mt-3 font-serif text-4xl leading-tight">
-          {estimate ? `€ ${estimate.year1Monthly.toLocaleString("en")}` : "€ —"}
-          <span className="text-lg text-primary-foreground/60">/mo</span>
+          {estimate
+            ? `€ ${estimate.year1Monthly.toLocaleString("en")}`
+            : result.emptyAmount}
+          <span className="text-lg text-primary-foreground/60">
+            {result.perMonthSuffix}
+          </span>
         </p>
-        <p className="mt-1 text-sm text-primary-foreground/70">
-          Year 1 · {content.rules.year1Percent}% of gross (statutory)
-        </p>
+        <p className="mt-1 text-sm text-primary-foreground/70">{year1Title}</p>
 
         <div className="mt-6 space-y-3 border-t border-primary-foreground/10 pt-5 text-sm">
-          <StatRow label="Year 2 pay">
-            {estimate ? `€ ${estimate.year2Monthly.toLocaleString("en")}/mo` : "—"}
+          <StatRow label={year2Title}>
+            {estimate
+              ? `€ ${estimate.year2Monthly.toLocaleString("en")}${result.perMonthSuffix}`
+              : "—"}
           </StatRow>
-          <StatRow label="Cumulative (24 mo)">
+          <StatRow label={result.totalLabel}>
             {estimate ? `€ ${estimate.totalOverMaxTerm.toLocaleString("en")}` : "—"}
           </StatRow>
-          <StatRow label="Weeks remaining">{content.rules.maxWeeks}</StatRow>
-          <StatRow label="Waiting day(s)">
-            {content.rules.waitingDays} day{content.rules.waitingDays === 1 ? "" : "s"}{" "}
-            (wachtdag)
-          </StatRow>
+          <StatRow label={result.maxWeeksLabel}>{rules.maxWeeks}</StatRow>
+          <StatRow label={result.waitingDaysLabel}>{waitingDaysValue}</StatRow>
         </div>
 
         <p className="mt-6 text-xs leading-relaxed text-primary-foreground/60">
-          Based on Art. 7:629 of the Dutch Civil Code. CAO in your sector may raise the
-          floor above statutory.
+          {result.footnote}
         </p>
       </div>
 

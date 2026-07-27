@@ -6,8 +6,17 @@
 import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
+import { formatTemplate } from "../content";
 
 export function HeroSection({ content }) {
+  const sample = content.sampleResult;
+  const rules = content.rules;
+
+  const weekProgress = formatTemplate(sample.weekProgressLabel, {
+    current: sample.currentWeek,
+    max: rules.maxWeeks,
+  });
+
   return (
     <section
       className="relative overflow-hidden border-b border-border/70"
@@ -41,11 +50,10 @@ export function HeroSection({ content }) {
               to="/eligibility"
               className="text-sm font-medium text-foreground underline decoration-border underline-offset-4 hover:decoration-accent"
             >
-              Not sure you're covered? Eligibility guide →
+              {content.hero.secondaryCtaLabel}
             </Link>
           </div>
 
-          {/* Stat strip — ACF "stats" repeater (3 rows) */}
           <dl className="mt-10 grid max-w-lg grid-cols-3 gap-6 border-t border-border/70 pt-6">
             {content.stats.map((s) => (
               <div key={s.label}>
@@ -58,7 +66,6 @@ export function HeroSection({ content }) {
           </dl>
         </div>
 
-        {/* Sample result preview — ACF "sample_*" fields, purely illustrative */}
         <div className="relative">
           <div
             className="rounded-2xl border border-border bg-card p-6"
@@ -66,19 +73,17 @@ export function HeroSection({ content }) {
           >
             <div className="flex items-center justify-between">
               <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                Sample entitlement
+                {sample.title}
               </p>
               <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent">
-                <CheckCircle2 className="h-3 w-3" /> Covered
+                <CheckCircle2 className="h-3 w-3" /> {sample.coveredLabel}
               </span>
             </div>
             <p className="mt-2 font-serif text-3xl text-foreground">
-              € {content.sampleResult.amount.toLocaleString("en")}
-              <span className="text-muted-foreground">/mo</span>
+              € {sample.amount.toLocaleString("en")}
+              <span className="text-muted-foreground">{sample.perMonthSuffix}</span>
             </p>
-            <p className="text-sm text-muted-foreground">
-              {content.sampleResult.periodLabel}
-            </p>
+            <p className="text-sm text-muted-foreground">{sample.periodLabel}</p>
 
             <div className="mt-5 h-2 w-full overflow-hidden rounded-full bg-secondary">
               <div
@@ -86,35 +91,31 @@ export function HeroSection({ content }) {
                 style={{
                   width: `${Math.min(
                     100,
-                    Math.round(
-                      (content.sampleResult.currentWeek / content.rules.maxWeeks) * 100,
-                    ),
+                    Math.round((sample.currentWeek / rules.maxWeeks) * 100),
                   )}%`,
                 }}
               />
             </div>
             <div className="mt-2 flex justify-between font-mono text-[11px] text-muted-foreground">
-              <span>Week 0</span>
-              <span>
-                Week {content.sampleResult.currentWeek} / {content.rules.maxWeeks}
-              </span>
+              <span>{sample.weekZeroLabel}</span>
+              <span>{weekProgress}</span>
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-3 border-t border-border pt-5">
               <div className="rounded-lg bg-secondary/60 p-3">
                 <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Year 1
+                  {sample.year1BoxLabel}
                 </p>
                 <p className="mt-1 font-serif text-lg text-foreground">
-                  {content.rules.year1Percent}%
+                  {rules.year1Percent}%
                 </p>
               </div>
               <div className="rounded-lg bg-secondary/60 p-3">
                 <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Year 2
+                  {sample.year2BoxLabel}
                 </p>
                 <p className="mt-1 font-serif text-lg text-foreground">
-                  {content.rules.year2Percent}%
+                  {rules.year2Percent}%
                 </p>
               </div>
             </div>
