@@ -40,9 +40,6 @@ export function ResultSummary({ content, estimate }) {
   const year1Title = formatTemplate(result.year1Title, {
     percent: rules.year1Percent,
   });
-  const year2Title = formatTemplate(result.year2Title, {
-    percent: rules.year2Percent,
-  });
   const waitingDaysValue = formatTemplate(result.waitingDaysValue, {
     days: rules.waitingDays,
   });
