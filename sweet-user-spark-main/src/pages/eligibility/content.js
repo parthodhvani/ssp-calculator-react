@@ -1,9 +1,8 @@
 /**
  * content.js — Eligibility page
  * ---------------------------------------------------------------------------
- * The 4-question eligibility guide. Good candidate for an ACF repeater
- * ("eligibility_questions": id / question / hint) if this needs to be
- * editable without touching code.
+ * Fallback when WordPress is offline. Live values come from ACF on WP page
+ * ID 149 via useEligibilityContent().
  * ---------------------------------------------------------------------------
  */
 
@@ -12,6 +11,11 @@ export const DEFAULT_CONTENT = {
   title: "Are you eligible for continued pay?",
   description:
     "Dutch law (Art. 7:629 BW) obliges most employers to keep paying you while you're ill — up to 104 weeks. Answer four questions to see whether you're covered.",
+
+  // Yes / No button labels on each question
+  yesLabel: "Yes",
+  noLabel: "No",
+
   questions: [
     {
       id: "contract",
@@ -34,6 +38,7 @@ export const DEFAULT_CONTENT = {
       hint: "Refusing reasonable reintegration steps is the most common reason pay gets suspended.",
     },
   ],
+
   outcomes: {
     allYesTitle: "You're most likely covered.",
     notCoveredTitle: "Your situation needs a closer look.",
@@ -41,6 +46,16 @@ export const DEFAULT_CONTENT = {
       "Based on your answers, your employer must continue paying you under Art. 7:629. Run the calculator to see the estimated euro amount.",
     anyNoBody:
       "One or more answers suggest your entitlement may be reduced, suspended, or fall outside statutory sick pay. Check the rules page or contact us for a full audit.",
-    grayZoneBody: "Complete the calculator for an estimate; some cases sit in a gray zone.",
+    grayZoneBody:
+      "Complete the calculator for an estimate; some cases sit in a gray zone.",
+    primaryCtaLabel: "Open the calculator",
+    primaryCtaLink: "/",
+    secondaryCtaLabel: "Read the rules",
+    secondaryCtaLink: "/rules",
   },
 };
+
+export function resolveHref(link, fallback = "#") {
+  if (link == null || String(link).trim() === "") return fallback;
+  return String(link).trim();
+}

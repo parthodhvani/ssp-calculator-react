@@ -1,0 +1,267 @@
+[
+  {
+    "key": "group_eligibility_page",
+    "title": "Eligibility Page — Edit Content",
+    "fields": [
+      {
+        "key": "field_elig_msg_welcome",
+        "label": "How to use",
+        "name": "",
+        "type": "message",
+        "message": "<div style=\"padding:12px 16px;background:#f0f6ff;border-left:4px solid #1e3a5f;border-radius:6px\"><p style=\"margin:0 0 8px\"><strong>Edit the Eligibility quiz here.</strong></p><p style=\"margin:0;color:#444\">Tabs match the page: Header → Questions → Yes/No buttons → Result messages &amp; buttons. Attach this field group to the <strong>Eligibility</strong> page (ID 149). Click <strong>Update</strong> after editing.</p></div>"
+      },
+
+      {
+        "key": "field_elig_tab_header",
+        "label": "① Page header",
+        "type": "tab",
+        "placement": "top"
+      },
+      {
+        "key": "field_elig_header",
+        "label": "Header",
+        "name": "header",
+        "type": "group",
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_elig_kicker",
+            "label": "Small kicker (above the title)",
+            "name": "kicker",
+            "type": "text",
+            "default_value": "Guide · 4 questions",
+            "instructions": "Example: Guide · 4 questions"
+          },
+          {
+            "key": "field_elig_title",
+            "label": "Page title",
+            "name": "title",
+            "type": "text",
+            "default_value": "Are you eligible for continued pay?"
+          },
+          {
+            "key": "field_elig_description",
+            "label": "Description under the title",
+            "name": "description",
+            "type": "textarea",
+            "rows": 3,
+            "default_value": "Dutch law (Art. 7:629 BW) obliges most employers to keep paying you while you're ill — up to 104 weeks. Answer four questions to see whether you're covered."
+          }
+        ]
+      },
+
+      {
+        "key": "field_elig_tab_questions",
+        "label": "② Questions",
+        "type": "tab"
+      },
+      {
+        "key": "field_elig_msg_questions",
+        "label": "",
+        "name": "",
+        "type": "message",
+        "message": "<p style=\"margin:0;padding:8px 12px;background:#f8fafc;border-radius:4px\">Add, edit, reorder, or remove quiz questions. Each row = one card on the website. <strong>ID</strong> is an internal code (e.g. contract) — keep it unique and stable.</p>"
+      },
+      {
+        "key": "field_elig_questions",
+        "label": "Questions",
+        "name": "questions",
+        "type": "repeater",
+        "layout": "block",
+        "min": 1,
+        "max": 12,
+        "button_label": "+ Add question",
+        "sub_fields": [
+          {
+            "key": "field_elig_q_id",
+            "label": "Question ID (internal)",
+            "name": "id",
+            "type": "text",
+            "instructions": "Short code, no spaces. Examples: contract, working, reported, cooperate",
+            "placeholder": "contract"
+          },
+          {
+            "key": "field_elig_q_text",
+            "label": "Question text",
+            "name": "question",
+            "type": "textarea",
+            "rows": 2,
+            "instructions": "The main question visitors see."
+          },
+          {
+            "key": "field_elig_q_hint",
+            "label": "Help text under the question",
+            "name": "hint",
+            "type": "textarea",
+            "rows": 2,
+            "instructions": "Optional clarifying note."
+          }
+        ]
+      },
+
+      {
+        "key": "field_elig_tab_answers",
+        "label": "③ Yes / No buttons",
+        "type": "tab"
+      },
+      {
+        "key": "field_elig_answers",
+        "label": "Answer button labels",
+        "name": "answers",
+        "type": "group",
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_elig_yes_label",
+            "label": "Yes button text",
+            "name": "yes_label",
+            "type": "text",
+            "default_value": "Yes",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_elig_no_label",
+            "label": "No button text",
+            "name": "no_label",
+            "type": "text",
+            "default_value": "No",
+            "wrapper": { "width": "50" }
+          }
+        ]
+      },
+
+      {
+        "key": "field_elig_tab_outcomes",
+        "label": "④ Result & buttons",
+        "type": "tab"
+      },
+      {
+        "key": "field_elig_msg_outcomes",
+        "label": "",
+        "name": "",
+        "type": "message",
+        "message": "<p style=\"margin:0;padding:8px 12px;background:#f8fafc;border-radius:4px\">Shown after <strong>all</strong> questions are answered. Keep the CTA buttons here (with links) — not in a separate tab.</p>"
+      },
+      {
+        "key": "field_elig_outcomes",
+        "label": "Result messages & CTAs",
+        "name": "outcomes",
+        "type": "group",
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_elig_all_yes_title",
+            "label": "All Yes — title",
+            "name": "all_yes_title",
+            "type": "text",
+            "default_value": "You're most likely covered."
+          },
+          {
+            "key": "field_elig_all_yes_body",
+            "label": "All Yes — body text",
+            "name": "all_yes_body",
+            "type": "textarea",
+            "rows": 3,
+            "default_value": "Based on your answers, your employer must continue paying you under Art. 7:629. Run the calculator to see the estimated euro amount."
+          },
+          {
+            "key": "field_elig_not_covered_title",
+            "label": "Not fully covered — title",
+            "name": "not_covered_title",
+            "type": "text",
+            "default_value": "Your situation needs a closer look."
+          },
+          {
+            "key": "field_elig_any_no_body",
+            "label": "When any answer is No — body text",
+            "name": "any_no_body",
+            "type": "textarea",
+            "rows": 3,
+            "default_value": "One or more answers suggest your entitlement may be reduced, suspended, or fall outside statutory sick pay. Check the rules page or contact us for a full audit."
+          },
+          {
+            "key": "field_elig_gray_zone_body",
+            "label": "Gray-zone body (fallback)",
+            "name": "gray_zone_body",
+            "type": "textarea",
+            "rows": 2,
+            "default_value": "Complete the calculator for an estimate; some cases sit in a gray zone."
+          },
+          {
+            "key": "field_elig_cta_msg",
+            "label": "",
+            "name": "",
+            "type": "message",
+            "message": "<p style=\"margin:0;font-weight:600;color:#1e3a5f\">Buttons under the result (with links)</p>"
+          },
+          {
+            "key": "field_elig_primary_cta_label",
+            "label": "Primary button — text",
+            "name": "primary_cta_label",
+            "type": "text",
+            "default_value": "Open the calculator",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_elig_primary_cta_link",
+            "label": "Primary button — link",
+            "name": "primary_cta_link",
+            "type": "text",
+            "default_value": "/",
+            "placeholder": "/",
+            "instructions": "Example: / or /#calculator",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_elig_secondary_cta_label",
+            "label": "Secondary button — text",
+            "name": "secondary_cta_label",
+            "type": "text",
+            "default_value": "Read the rules",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_elig_secondary_cta_link",
+            "label": "Secondary button — link",
+            "name": "secondary_cta_link",
+            "type": "text",
+            "default_value": "/rules",
+            "placeholder": "/rules",
+            "wrapper": { "width": "50" }
+          }
+        ]
+      }
+    ],
+    "location": [
+      [
+        {
+          "param": "page",
+          "operator": "==",
+          "value": "149"
+        }
+      ]
+    ],
+    "menu_order": 0,
+    "position": "acf_after_title",
+    "style": "seamless",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": [
+      "the_content",
+      "excerpt",
+      "discussion",
+      "comments",
+      "revisions",
+      "slug",
+      "author",
+      "format",
+      "featured_image",
+      "categories",
+      "tags",
+      "send-trackbacks"
+    ],
+    "active": true,
+    "show_in_rest": 1,
+    "description": "Client-friendly content for the Eligibility quiz. Attach to WP Page ID 149 (slug: eligibility). Frontend fetches /wp-json/wp/v2/pages/149."
+  }
+]

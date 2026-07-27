@@ -1,17 +1,17 @@
 /**
  * EligibilityPage.jsx
  * ---------------------------------------------------------------------------
- * The "/eligibility" route. Import and render this from
- * src/routes/eligibility.tsx.
+ * The "/eligibility" route. UI structure unchanged — all copy from ACF
+ * via useEligibilityContent() (WP page ID 149).
  * ---------------------------------------------------------------------------
  */
 import { useState } from "react";
-import { DEFAULT_CONTENT } from "./content";
+import { useEligibilityContent } from "./useEligibilityContent";
 import { QuestionItem } from "./components/QuestionItem";
 import { ResultBanner } from "./components/ResultBanner";
 
 export function EligibilityPage() {
-  const content = DEFAULT_CONTENT;
+  const { content } = useEligibilityContent();
   const [answers, setAnswers] = useState({});
 
   function handleAnswer(id, opt) {
@@ -45,6 +45,8 @@ export function EligibilityPage() {
             item={item}
             value={answers[item.id]}
             onAnswer={handleAnswer}
+            yesLabel={content.yesLabel}
+            noLabel={content.noLabel}
           />
         ))}
       </div>
