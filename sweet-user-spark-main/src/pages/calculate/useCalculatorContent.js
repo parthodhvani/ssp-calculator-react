@@ -1,26 +1,20 @@
 /**
  * useCalculatorContent.js
  * ---------------------------------------------------------------------------
- * Fetches the ACF-driven content from WordPress and merges it on top of
- * DEFAULT_CONTENT, so the page never breaks if WordPress is unreachable or a
- * field hasn't been filled in yet.
+ * Fetches ACF from the WordPress Calculate page and maps it onto DEFAULT_CONTENT.
  *
- * WP SIDE SETUP (see /wp-acf/ACF-INTEGRATION.md for full detail):
- *   1. Install "ACF to REST API" plugin (or ACF Pro 6.1+, which has it built in).
- *   2. Create the field group from /wp-acf/acf-field-group.json
- *      (ACF > Field Groups > Tools > Import Field Groups).
- *   3. Attach it to an Options Page ("Calculator Settings") — recommended,
- *      since this content isn't tied to a specific post.
- *   4. That exposes the fields at:
- *        GET {WP_URL}/wp-json/acf/v3/options/options
- *      returning { acf: { hero_badge: "...", stats_0_stat_value: "...", ... } }
+ * Endpoint:
+ *   GET {VITE_WP_API_URL}/wp-json/wp/v2/pages?slug=calculate&_fields=id,slug,acf
  *
- * If you'd rather attach the field group to a normal Page instead of an
- * Options Page, change ACF_ENDPOINT below to:
- *        {WP_URL}/wp-json/acf/v3/pages/{PAGE_ID}
+ * ACF is organised into client-friendly groups (see wp-acf/acf-field-group.json):
+ *   hero, sample, section, form, salary, hours, rules, result,
+ *   how_it_works_section, policy_cta
+ * plus repeaters: stats, industries, how_it_works
  *
- * Set the WordPress base URL once via env var:
- *        VITE_WP_API_URL=https://cms.example.com
+ * The mapper also accepts the older flat field names (hero_badge, rules_year1_percent,
+ * calculator_salary_label, …) so existing WP installs keep working.
+ *
+ * Returns: { content, isLoading, isFallback, error }
  * ---------------------------------------------------------------------------
  */
 
@@ -28,86 +22,445 @@ import { useEffect, useState } from "react";
 import { DEFAULT_CONTENT } from "./content";
 
 const WP_API_URL = import.meta.env.VITE_WP_API_URL;
+const PAGE_SLUG = import.meta.env.VITE_WP_CALCULATE_SLUG || "calculate";
+
 const ACF_ENDPOINT = WP_API_URL
-  ? `${WP_API_URL.replace(/\/$/, "")}/wp-json/acf/v3/options/options`
+  ? `${WP_API_URL.replace(/\/$/, "")}/wp-json/wp/v2/pages?slug=${encodeURIComponent(PAGE_SLUG)}&_fields=id,slug,acf`
   : null;
 
-/**
- * Converts the raw ACF JSON (flat field names, repeater rows as arrays of
- * objects) into the content shape used by the UI. Keeping this mapping in
- * one place means a renamed ACF field only needs to be updated here, never
- * inside a component.
- */
-function mapAcfResponseToContent(acf) {
-  const content = {};
+function num(value, fallback) {
+  if (value === "" || value == null) return fallback;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
 
-  if (acf.hero_badge || acf.hero_title_line1 || acf.hero_description) {
+function str(value, fallback) {
+  if (value == null || value === "") return fallback;
+  return String(value);
+}
+
+/** First non-empty value among candidates. */
+function first(...candidates) {
+  for (const v of candidates) {
+    if (v != null && v !== "") return v;
+  }
+  return undefined;
+}
+
+/** Read a nested group object, or null. */
+function group(acf, name) {
+  const g = acf?.[name];
+  if (g && typeof g === "object" && !Array.isArray(g)) return g;
+  return null;
+}
+
+/**
+ * Map nested (preferred) + flat (legacy) ACF into the React content shape.
+ */
+export function mapAcfResponseToContent(acf) {
+  if (!acf || typeof acf !== "object") return {};
+
+  const content = {};
+  const heroG = group(acf, "hero");
+  const sampleG = group(acf, "sample");
+  const sectionG = group(acf, "section");
+  const formG = group(acf, "form");
+  const salaryG = group(acf, "salary");
+  const hoursG = group(acf, "hours");
+  const rulesG = group(acf, "rules");
+  const resultG = group(acf, "result");
+  const howSecG = group(acf, "how_it_works_section");
+  const policyG = group(acf, "policy_cta");
+
+  // ── Hero ────────────────────────────────────────────────────────────────
+  if (heroG || acf.hero_badge || acf.hero_title_line1 || acf.hero_cta_label) {
+    const d = DEFAULT_CONTENT.hero;
     content.hero = {
-      badge: acf.hero_badge ?? DEFAULT_CONTENT.hero.badge,
-      titleLine1: acf.hero_title_line1 ?? DEFAULT_CONTENT.hero.titleLine1,
-      titleHighlight: acf.hero_title_highlight ?? DEFAULT_CONTENT.hero.titleHighlight,
-      titleSuffix: acf.hero_title_suffix ?? DEFAULT_CONTENT.hero.titleSuffix,
-      description: acf.hero_description ?? DEFAULT_CONTENT.hero.description,
-      ctaLabel: acf.hero_cta_label ?? DEFAULT_CONTENT.hero.ctaLabel,
+      badge: str(first(heroG?.badge, acf.hero_badge), d.badge),
+      titleLine1: str(first(heroG?.title_line1, acf.hero_title_line1), d.titleLine1),
+      titleHighlight: str(
+        first(heroG?.title_highlight, acf.hero_title_highlight),
+        d.titleHighlight,
+      ),
+      titleSuffix: str(first(heroG?.title_suffix, acf.hero_title_suffix), d.titleSuffix),
+      description: str(first(heroG?.description, acf.hero_description), d.description),
+      ctaLabel: str(first(heroG?.cta_label, acf.hero_cta_label), d.ctaLabel),
+      secondaryCtaLabel: str(
+        first(heroG?.secondary_cta_label, acf.hero_secondary_cta_label),
+        d.secondaryCtaLabel,
+      ),
     };
   }
 
-  // ACF repeater fields come back as an array of row objects.
+  // ── Stats ───────────────────────────────────────────────────────────────
   if (Array.isArray(acf.stats) && acf.stats.length > 0) {
     content.stats = acf.stats.map((row) => ({
-      value: row.stat_value ?? "",
-      label: row.stat_label ?? "",
+      value: first(row.value, row.stat_value) ?? "",
+      label: first(row.label, row.stat_label) ?? "",
     }));
   }
 
-  if (acf.sample_amount || acf.sample_period_label) {
+  // ── Sample preview card ─────────────────────────────────────────────────
+  if (
+    sampleG ||
+    acf.sample_amount != null ||
+    acf.sample_title ||
+    acf.sample_period_label
+  ) {
+    const d = DEFAULT_CONTENT.sampleResult;
     content.sampleResult = {
-      amount: Number(acf.sample_amount) || DEFAULT_CONTENT.sampleResult.amount,
-      periodLabel: acf.sample_period_label ?? DEFAULT_CONTENT.sampleResult.periodLabel,
-      currentWeek:
-        Number(acf.sample_current_week) || DEFAULT_CONTENT.sampleResult.currentWeek,
+      title: str(first(sampleG?.title, acf.sample_title), d.title),
+      coveredLabel: str(
+        first(sampleG?.covered_label, acf.sample_covered_label),
+        d.coveredLabel,
+      ),
+      amount: num(first(sampleG?.amount, acf.sample_amount), d.amount),
+      periodLabel: str(
+        first(sampleG?.period_label, acf.sample_period_label),
+        d.periodLabel,
+      ),
+      currentWeek: num(
+        first(sampleG?.current_week, acf.sample_current_week),
+        d.currentWeek,
+      ),
+      weekZeroLabel: str(
+        first(sampleG?.week_zero_label, acf.sample_week_zero_label),
+        d.weekZeroLabel,
+      ),
+      weekProgressLabel: str(
+        first(sampleG?.week_progress_label, acf.sample_week_progress_label),
+        d.weekProgressLabel,
+      ),
+      year1BoxLabel: str(
+        first(sampleG?.year1_box_label, acf.sample_year1_box_label),
+        d.year1BoxLabel,
+      ),
+      year2BoxLabel: str(
+        first(sampleG?.year2_box_label, acf.sample_year2_box_label),
+        d.year2BoxLabel,
+      ),
+      perMonthSuffix: str(
+        first(sampleG?.per_month_suffix, acf.sample_per_month_suffix),
+        d.perMonthSuffix,
+      ),
     };
   }
 
+  // ── Industries ──────────────────────────────────────────────────────────
   if (Array.isArray(acf.industries) && acf.industries.length > 0) {
-    content.industries = acf.industries.map((row) => row.industry_name).filter(Boolean);
+    content.industries = acf.industries
+      .map((row) => first(row.name, row.industry_name))
+      .filter(Boolean);
   }
 
-  if (acf.rules_year1_percent || acf.rules_min_wage_monthly) {
-    content.rules = {
-      year1Percent: Number(acf.rules_year1_percent) || DEFAULT_CONTENT.rules.year1Percent,
-      year2Percent: Number(acf.rules_year2_percent) || DEFAULT_CONTENT.rules.year2Percent,
-      maxWeeks: Number(acf.rules_max_weeks) || DEFAULT_CONTENT.rules.maxWeeks,
-      waitingDays: Number(acf.rules_waiting_days) ?? DEFAULT_CONTENT.rules.waitingDays,
-      minWageMonthly:
-        Number(acf.rules_min_wage_monthly) || DEFAULT_CONTENT.rules.minWageMonthly,
-      linkedAbsenceWindowDays:
-        Number(acf.rules_linked_absence_days) ||
-        DEFAULT_CONTENT.rules.linkedAbsenceWindowDays,
+  // ── Section heading ─────────────────────────────────────────────────────
+  if (sectionG || acf.section_kicker || acf.section_title) {
+    const d = DEFAULT_CONTENT.section;
+    content.section = {
+      kicker: str(first(sectionG?.kicker, acf.section_kicker), d.kicker),
+      title: str(first(sectionG?.title, acf.section_title), d.title),
+      description: str(
+        first(sectionG?.description, acf.section_description),
+        d.description,
+      ),
     };
   }
 
+  // ── Calculator form (form + salary + hours groups) ──────────────────────
+  const hasForm =
+    formG ||
+    salaryG ||
+    hoursG ||
+    acf.calculator_salary_label ||
+    acf.calculator_hours_label ||
+    acf.calculator_name_label ||
+    acf.calculator_submit_label;
+
+  if (hasForm) {
+    const d = DEFAULT_CONTENT.calculator;
+
+    let statusOptions = d.statusOptions;
+    const rawStatus = formG?.status_options ?? acf.calculator_status_options;
+    if (Array.isArray(rawStatus) && rawStatus.length > 0) {
+      statusOptions = rawStatus
+        .map((row) => ({
+          value: first(row.value, row.status_value) ?? "",
+          label: first(row.label, row.status_label) ?? "",
+        }))
+        .filter((o) => o.value && o.label);
+      if (statusOptions.length === 0) statusOptions = d.statusOptions;
+    }
+
+    content.calculator = {
+      nameLabel: str(
+        first(formG?.name_label, acf.calculator_name_label),
+        d.nameLabel,
+      ),
+      namePlaceholder: str(
+        first(formG?.name_placeholder, acf.calculator_name_placeholder),
+        d.namePlaceholder,
+      ),
+      companyLabel: str(
+        first(formG?.company_label, acf.calculator_company_label),
+        d.companyLabel,
+      ),
+      companyPlaceholder: str(
+        first(formG?.company_placeholder, acf.calculator_company_placeholder),
+        d.companyPlaceholder,
+      ),
+      companyHint: str(
+        first(formG?.company_hint, acf.calculator_company_hint),
+        d.companyHint,
+      ),
+      industryLabel: str(
+        first(formG?.industry_label, acf.calculator_industry_label),
+        d.industryLabel,
+      ),
+      industryPlaceholder: str(
+        first(formG?.industry_placeholder, acf.calculator_industry_placeholder),
+        d.industryPlaceholder,
+      ),
+      industryHint: str(
+        first(formG?.industry_hint, acf.calculator_industry_hint),
+        d.industryHint,
+      ),
+      statusLabel: str(
+        first(formG?.status_label, acf.calculator_status_label),
+        d.statusLabel,
+      ),
+      statusOptions,
+      statusDefault: str(
+        first(formG?.status_default, acf.calculator_status_default),
+        d.statusDefault,
+      ),
+
+      salaryLabel: str(
+        first(salaryG?.label, acf.calculator_salary_label),
+        d.salaryLabel,
+      ),
+      salaryPlaceholder: str(
+        first(salaryG?.placeholder, acf.calculator_salary_placeholder),
+        d.salaryPlaceholder,
+      ),
+      salaryDefault: str(
+        first(salaryG?.default_value, acf.calculator_salary_default),
+        d.salaryDefault,
+      ),
+      salaryMin: num(first(salaryG?.min, acf.calculator_salary_min), d.salaryMin),
+      salaryMax: num(first(salaryG?.max, acf.calculator_salary_max), d.salaryMax),
+      salaryStep: num(first(salaryG?.step, acf.calculator_salary_step), d.salaryStep),
+
+      hoursLabel: str(
+        first(hoursG?.label, acf.calculator_hours_label),
+        d.hoursLabel,
+      ),
+      hoursPlaceholder: str(
+        first(hoursG?.placeholder, acf.calculator_hours_placeholder),
+        d.hoursPlaceholder,
+      ),
+      hoursDefault: str(
+        first(hoursG?.default_value, acf.calculator_hours_default),
+        d.hoursDefault,
+      ),
+      hoursMin: num(first(hoursG?.min, acf.calculator_hours_min), d.hoursMin),
+      hoursMax: num(first(hoursG?.max, acf.calculator_hours_max), d.hoursMax),
+      hoursStep: num(first(hoursG?.step, acf.calculator_hours_step), d.hoursStep),
+
+      firstDayLabel: str(
+        first(formG?.first_day_label, acf.calculator_first_day_label),
+        d.firstDayLabel,
+      ),
+      firstDayHint: str(
+        first(formG?.first_day_hint, acf.calculator_first_day_hint),
+        d.firstDayHint,
+      ),
+      lastDayLabel: str(
+        first(formG?.last_day_label, acf.calculator_last_day_label),
+        d.lastDayLabel,
+      ),
+      linkedLabel: str(
+        first(formG?.linked_label, acf.calculator_linked_label),
+        d.linkedLabel,
+      ),
+      linkedDescription: str(
+        first(formG?.linked_description, acf.calculator_linked_description),
+        d.linkedDescription,
+      ),
+      linkedLastDayLabel: str(
+        first(formG?.linked_last_day_label, acf.calculator_linked_last_day_label),
+        d.linkedLastDayLabel,
+      ),
+      linkedFlagMessage: str(
+        first(formG?.linked_flag_message, acf.calculator_linked_flag_message),
+        d.linkedFlagMessage,
+      ),
+      submitLabel: str(
+        first(formG?.submit_label, acf.calculator_submit_label),
+        d.submitLabel,
+      ),
+    };
+  }
+
+  // ── Pay rules (single source of truth for maths + displayed %) ──────────
+  if (
+    rulesG ||
+    acf.rules_year1_percent != null ||
+    acf.year1_percentage != null ||
+    acf.rules_year2_percent != null ||
+    acf.rules_max_weeks != null ||
+    acf.rules_waiting_days != null ||
+    acf.rules_min_wage_monthly != null ||
+    acf.rules_linked_absence_days != null
+  ) {
+    const d = DEFAULT_CONTENT.rules;
+    content.rules = {
+      year1Percent: num(
+        first(
+          rulesG?.year1_percent,
+          acf.rules_year1_percent,
+          acf.year1_percentage,
+        ),
+        d.year1Percent,
+      ),
+      year2Percent: num(
+        first(
+          rulesG?.year2_percent,
+          acf.rules_year2_percent,
+          acf.year2_percentage,
+        ),
+        d.year2Percent,
+      ),
+      maxWeeks: num(first(rulesG?.max_weeks, acf.rules_max_weeks), d.maxWeeks),
+      waitingDays: num(
+        first(rulesG?.waiting_days, acf.rules_waiting_days),
+        d.waitingDays,
+      ),
+      minWageMonthly: num(
+        first(rulesG?.min_wage_monthly, acf.rules_min_wage_monthly),
+        d.minWageMonthly,
+      ),
+      linkedAbsenceWindowDays: num(
+        first(rulesG?.linked_absence_days, acf.rules_linked_absence_days),
+        d.linkedAbsenceWindowDays,
+      ),
+    };
+  }
+
+  // ── Result card ─────────────────────────────────────────────────────────
+  if (
+    resultG ||
+    acf.year1_result_title ||
+    acf.result_total_label ||
+    acf.result_kicker
+  ) {
+    const d = DEFAULT_CONTENT.result;
+    content.result = {
+      kicker: str(first(resultG?.kicker, acf.result_kicker), d.kicker),
+      emptyAmount: str(
+        first(resultG?.empty_amount, acf.result_empty_amount),
+        d.emptyAmount,
+      ),
+      perMonthSuffix: str(
+        first(resultG?.per_month_suffix, acf.result_per_month_suffix),
+        d.perMonthSuffix,
+      ),
+      year1Title: str(
+        first(resultG?.year1_title, acf.year1_result_title),
+        d.year1Title,
+      ),
+      year2Title: str(
+        first(resultG?.year2_title, acf.year2_result_title),
+        d.year2Title,
+      ),
+      year2PayLabel: str(
+        first(resultG?.year2_pay_label, acf.result_year2_pay_label),
+        d.year2PayLabel,
+      ),
+      totalLabel: str(
+        first(resultG?.total_label, acf.result_total_label),
+        d.totalLabel,
+      ),
+      monthlyLabel: str(
+        first(resultG?.monthly_label, acf.result_monthly_label),
+        d.monthlyLabel,
+      ),
+      maxWeeksLabel: str(
+        first(resultG?.max_weeks_label, acf.result_max_weeks_label),
+        d.maxWeeksLabel,
+      ),
+      waitingDaysLabel: str(
+        first(resultG?.waiting_days_label, acf.result_waiting_days_label),
+        d.waitingDaysLabel,
+      ),
+      waitingDaysValue: str(
+        first(resultG?.waiting_days_value, acf.result_waiting_days_value),
+        d.waitingDaysValue,
+      ),
+      linkedAbsenceLabel: str(
+        first(resultG?.linked_absence_label, acf.result_linked_absence_label),
+        d.linkedAbsenceLabel,
+      ),
+      footnote: str(first(resultG?.footnote, acf.result_footnote), d.footnote),
+    };
+  }
+
+  // ── How it works ────────────────────────────────────────────────────────
+  if (howSecG || acf.how_it_works_kicker || acf.how_it_works_title) {
+    const d = DEFAULT_CONTENT.howItWorksSection;
+    content.howItWorksSection = {
+      kicker: str(first(howSecG?.kicker, acf.how_it_works_kicker), d.kicker),
+      title: str(first(howSecG?.title, acf.how_it_works_title), d.title),
+    };
+  }
   if (Array.isArray(acf.how_it_works) && acf.how_it_works.length > 0) {
     content.howItWorks = acf.how_it_works.map((row) => ({
-      number: row.step_number ?? "",
-      title: row.step_title ?? "",
-      description: row.step_description ?? "",
+      number: first(row.number, row.step_number) ?? "",
+      title: first(row.title, row.step_title) ?? "",
+      description: first(row.description, row.step_description) ?? "",
     }));
   }
 
-  if (acf.policy_cta_title || acf.policy_cta_description) {
+  // ── Policy CTA + disclaimer ─────────────────────────────────────────────
+  if (policyG || acf.policy_cta_title || acf.policy_cta_description) {
+    const d = DEFAULT_CONTENT.policyAnalyserCta;
     content.policyAnalyserCta = {
-      title: acf.policy_cta_title ?? DEFAULT_CONTENT.policyAnalyserCta.title,
-      description:
-        acf.policy_cta_description ?? DEFAULT_CONTENT.policyAnalyserCta.description,
+      title: str(first(policyG?.title, acf.policy_cta_title), d.title),
+      description: str(
+        first(policyG?.description, acf.policy_cta_description),
+        d.description,
+      ),
     };
   }
 
   if (acf.disclaimer_text) {
-    content.disclaimer = acf.disclaimer_text;
+    content.disclaimer = str(acf.disclaimer_text, DEFAULT_CONTENT.disclaimer);
   }
 
   return content;
+}
+
+function mergeContent(mapped) {
+  return {
+    ...DEFAULT_CONTENT,
+    ...mapped,
+    hero: { ...DEFAULT_CONTENT.hero, ...mapped.hero },
+    sampleResult: { ...DEFAULT_CONTENT.sampleResult, ...mapped.sampleResult },
+    section: { ...DEFAULT_CONTENT.section, ...mapped.section },
+    calculator: { ...DEFAULT_CONTENT.calculator, ...mapped.calculator },
+    rules: { ...DEFAULT_CONTENT.rules, ...mapped.rules },
+    result: { ...DEFAULT_CONTENT.result, ...mapped.result },
+    howItWorksSection: {
+      ...DEFAULT_CONTENT.howItWorksSection,
+      ...mapped.howItWorksSection,
+    },
+    policyAnalyserCta: {
+      ...DEFAULT_CONTENT.policyAnalyserCta,
+      ...mapped.policyAnalyserCta,
+    },
+    stats: mapped.stats ?? DEFAULT_CONTENT.stats,
+    industries: mapped.industries ?? DEFAULT_CONTENT.industries,
+    howItWorks: mapped.howItWorks ?? DEFAULT_CONTENT.howItWorks,
+  };
 }
 
 export function useCalculatorContent() {
@@ -117,10 +470,7 @@ export function useCalculatorContent() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!ACF_ENDPOINT) {
-      // No WP URL configured (e.g. local dev) — silently use defaults.
-      return;
-    }
+    if (!ACF_ENDPOINT) return;
 
     let cancelled = false;
 
@@ -129,21 +479,22 @@ export function useCalculatorContent() {
         const res = await fetch(ACF_ENDPOINT);
         if (!res.ok) throw new Error(`WP REST API responded ${res.status}`);
         const json = await res.json();
-        const mapped = mapAcfResponseToContent(json.acf ?? {});
+        const page = Array.isArray(json) ? json[0] : json;
+        const acf = page?.acf;
 
+        if (!acf || (typeof acf === "object" && Object.keys(acf).length === 0)) {
+          if (!cancelled) {
+            setIsFallback(true);
+            setError("Calculate page ACF fields are empty");
+          }
+          return;
+        }
+
+        const mapped = mapAcfResponseToContent(acf);
         if (!cancelled) {
-          setContent({
-            ...DEFAULT_CONTENT,
-            ...mapped,
-            hero: { ...DEFAULT_CONTENT.hero, ...mapped.hero },
-            sampleResult: { ...DEFAULT_CONTENT.sampleResult, ...mapped.sampleResult },
-            rules: { ...DEFAULT_CONTENT.rules, ...mapped.rules },
-            policyAnalyserCta: {
-              ...DEFAULT_CONTENT.policyAnalyserCta,
-              ...mapped.policyAnalyserCta,
-            },
-          });
+          setContent(mergeContent(mapped));
           setIsFallback(false);
+          setError(null);
         }
       } catch (err) {
         if (!cancelled) {

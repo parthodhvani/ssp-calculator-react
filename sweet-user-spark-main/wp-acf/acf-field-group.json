@@ -1,244 +1,947 @@
 [
   {
     "key": "group_sick_leave_calculator",
-    "title": "Sick Leave Calculator",
+    "title": "Calculate Page Content",
     "fields": [
       {
-        "key": "field_hero_badge",
-        "name": "hero_badge",
-        "label": "Hero badge text",
-        "type": "text",
-        "default_value": "Art. 7:629 \u00b7 minimum wage July 2026"
+        "key": "field_msg_welcome",
+        "label": "Welcome",
+        "name": "",
+        "type": "message",
+        "message": "<div style=\"padding:8px 12px;background:#f0f6ff;border-left:4px solid #1e3a5f;border-radius:4px\"><p style=\"margin:0 0 6px\"><strong>Edit this page’s content here.</strong></p><p style=\"margin:0;color:#444\">Use the tabs below. Changes appear on the website after you click <strong>Update</strong>. You do not need a developer for copy, percentages, labels, or defaults.</p></div>"
+      },
+
+      {
+        "key": "field_tab_hero",
+        "label": "1. Hero Banner",
+        "type": "tab",
+        "placement": "top"
       },
       {
-        "key": "field_hero_title_line1",
-        "name": "hero_title_line1",
-        "label": "Hero title (line 1)",
-        "type": "text",
-        "default_value": "Netherlands sick leave,"
+        "key": "field_msg_hero",
+        "label": "",
+        "name": "",
+        "type": "message",
+        "message": "<p>Top of the Calculate page — the big headline visitors see first.</p>"
       },
       {
-        "key": "field_hero_title_highlight",
-        "name": "hero_title_highlight",
-        "label": "Hero title (highlighted phrase)",
-        "type": "text",
-        "default_value": "calculated properly"
+        "key": "field_hero",
+        "label": "Hero content",
+        "name": "hero",
+        "type": "group",
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_hero_badge",
+            "label": "Small badge (above the title)",
+            "name": "badge",
+            "type": "text",
+            "instructions": "Short legal or context tag, e.g. “Art. 7:629 · minimum wage July 2026”.",
+            "default_value": "Art. 7:629 · minimum wage July 2026"
+          },
+          {
+            "key": "field_hero_title_line1",
+            "label": "Title — first line",
+            "name": "title_line1",
+            "type": "text",
+            "default_value": "Netherlands sick leave,",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_hero_title_highlight",
+            "label": "Title — highlighted words",
+            "name": "title_highlight",
+            "type": "text",
+            "instructions": "Shown in accent colour with underline.",
+            "default_value": "calculated properly",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_hero_title_suffix",
+            "label": "Title — ending",
+            "name": "title_suffix",
+            "type": "text",
+            "default_value": "— and explained."
+          },
+          {
+            "key": "field_hero_description",
+            "label": "Short description",
+            "name": "description",
+            "type": "textarea",
+            "rows": 3,
+            "instructions": "1–3 sentences under the title."
+          },
+          {
+            "key": "field_hero_cta_label",
+            "label": "Main button text",
+            "name": "cta_label",
+            "type": "text",
+            "default_value": "Start calculating",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_hero_secondary_cta_label",
+            "label": "Secondary link text",
+            "name": "secondary_cta_label",
+            "type": "text",
+            "instructions": "Link to the Eligibility page.",
+            "default_value": "Not sure you're covered? Eligibility guide →",
+            "wrapper": { "width": "50" }
+          }
+        ]
+      },
+
+      {
+        "key": "field_tab_stats",
+        "label": "2. Key Statistics",
+        "type": "tab"
       },
       {
-        "key": "field_hero_title_suffix",
-        "name": "hero_title_suffix",
-        "label": "Hero title (suffix)",
-        "type": "text",
-        "default_value": "\u2014 and explained."
-      },
-      {
-        "key": "field_hero_description",
-        "name": "hero_description",
-        "label": "Hero description",
-        "type": "textarea",
-        "rows": 3
-      },
-      {
-        "key": "field_hero_cta_label",
-        "name": "hero_cta_label",
-        "label": "Hero CTA button text",
-        "type": "text",
-        "default_value": "Start calculating"
+        "key": "field_msg_stats",
+        "label": "",
+        "name": "",
+        "type": "message",
+        "message": "<p>Three (or more) highlight numbers under the hero — e.g. weeks, %, minimum wage.</p>"
       },
       {
         "key": "field_stats",
+        "label": "Statistics",
         "name": "stats",
-        "label": "Stat strip (3 items)",
         "type": "repeater",
         "layout": "table",
-        "min": 3,
-        "max": 3,
-        "button_label": "Add stat",
+        "min": 1,
+        "max": 6,
+        "button_label": "+ Add statistic",
+        "instructions": "Recommended: 3 items.",
         "sub_fields": [
           {
             "key": "field_stat_value",
-            "name": "stat_value",
-            "label": "Value",
+            "label": "Number / value",
+            "name": "value",
             "type": "text",
-            "placeholder": "e.g. 104"
+            "placeholder": "e.g. 104 or 70% or € 2,437",
+            "wrapper": { "width": "40" }
           },
           {
             "key": "field_stat_label",
-            "name": "stat_label",
-            "label": "Label",
+            "label": "Label under the number",
+            "name": "label",
             "type": "text",
-            "placeholder": "e.g. weeks max entitlement"
+            "placeholder": "e.g. weeks max entitlement",
+            "wrapper": { "width": "60" }
           }
         ]
       },
+
       {
-        "key": "field_sample_amount",
-        "name": "sample_amount",
-        "label": "Sample result: monthly amount (EUR)",
-        "type": "number",
-        "default_value": 3200
+        "key": "field_tab_sample",
+        "label": "3. Preview Card",
+        "type": "tab"
       },
       {
-        "key": "field_sample_period_label",
-        "name": "sample_period_label",
-        "label": "Sample result: period label",
-        "type": "text",
-        "default_value": "Year 1 \u00b7 Weeks 1\u201352"
+        "key": "field_msg_sample",
+        "label": "",
+        "name": "",
+        "type": "message",
+        "message": "<p>Illustrative example card next to the hero (not a real user calculation).</p>"
       },
       {
-        "key": "field_sample_current_week",
-        "name": "sample_current_week",
-        "label": "Sample result: current week",
-        "type": "number",
-        "default_value": 40
+        "key": "field_sample",
+        "label": "Preview card",
+        "name": "sample",
+        "type": "group",
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_sample_title",
+            "label": "Card title",
+            "name": "title",
+            "type": "text",
+            "default_value": "Sample entitlement",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_sample_covered_label",
+            "label": "Status badge",
+            "name": "covered_label",
+            "type": "text",
+            "default_value": "Covered",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_sample_amount",
+            "label": "Example monthly amount (€)",
+            "name": "amount",
+            "type": "number",
+            "default_value": 3200,
+            "append": "€ / month",
+            "wrapper": { "width": "33" }
+          },
+          {
+            "key": "field_sample_period_label",
+            "label": "Period caption",
+            "name": "period_label",
+            "type": "text",
+            "default_value": "Year 1 · Weeks 1–52",
+            "wrapper": { "width": "34" }
+          },
+          {
+            "key": "field_sample_current_week",
+            "label": "Progress bar — current week",
+            "name": "current_week",
+            "type": "number",
+            "default_value": 40,
+            "append": "week",
+            "wrapper": { "width": "33" }
+          },
+          {
+            "key": "field_sample_week_zero_label",
+            "label": "Progress start label",
+            "name": "week_zero_label",
+            "type": "text",
+            "default_value": "Week 0",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_sample_week_progress_label",
+            "label": "Progress end label",
+            "name": "week_progress_label",
+            "type": "text",
+            "instructions": "Use {current} and {max}. Example: Week {current} / {max}",
+            "default_value": "Week {current} / {max}",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_sample_year1_box_label",
+            "label": "Left box label",
+            "name": "year1_box_label",
+            "type": "text",
+            "default_value": "Year 1",
+            "wrapper": { "width": "33" }
+          },
+          {
+            "key": "field_sample_year2_box_label",
+            "label": "Right box label",
+            "name": "year2_box_label",
+            "type": "text",
+            "default_value": "Year 2",
+            "wrapper": { "width": "33" }
+          },
+          {
+            "key": "field_sample_per_month_suffix",
+            "label": "Per-month suffix",
+            "name": "per_month_suffix",
+            "type": "text",
+            "default_value": "/mo",
+            "wrapper": { "width": "34" }
+          }
+        ]
+      },
+
+      {
+        "key": "field_tab_industries",
+        "label": "4. Industries",
+        "type": "tab"
+      },
+      {
+        "key": "field_msg_industries",
+        "label": "",
+        "name": "",
+        "type": "message",
+        "message": "<p>Options in the Industry / sector dropdown on the calculator form.</p>"
       },
       {
         "key": "field_industries",
+        "label": "Industry list",
         "name": "industries",
-        "label": "Industry dropdown options",
         "type": "repeater",
         "layout": "table",
-        "button_label": "Add industry",
+        "button_label": "+ Add industry",
         "sub_fields": [
           {
             "key": "field_industry_name",
-            "name": "industry_name",
             "label": "Industry name",
-            "type": "text"
+            "name": "name",
+            "type": "text",
+            "placeholder": "e.g. Healthcare & Care"
+          }
+        ]
+      },
+
+      {
+        "key": "field_tab_form",
+        "label": "5. Calculator Form",
+        "type": "tab"
+      },
+      {
+        "key": "field_msg_form",
+        "label": "",
+        "name": "",
+        "type": "message",
+        "message": "<p>Section heading + every form label, placeholder, and default. Scroll to <strong>Salary field</strong> and <strong>Hours field</strong> to control those two inputs.</p>"
+      },
+      {
+        "key": "field_section",
+        "label": "Section heading (above the form)",
+        "name": "section",
+        "type": "group",
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_section_kicker",
+            "label": "Small kicker",
+            "name": "kicker",
+            "type": "text",
+            "default_value": "01 · Calculate",
+            "wrapper": { "width": "30" }
+          },
+          {
+            "key": "field_section_title",
+            "label": "Heading",
+            "name": "title",
+            "type": "text",
+            "default_value": "Your entitlement",
+            "wrapper": { "width": "70" }
+          },
+          {
+            "key": "field_section_description",
+            "label": "Description",
+            "name": "description",
+            "type": "textarea",
+            "rows": 2,
+            "default_value": "Everything is computed in your browser — nothing is sent anywhere until you ask for the full report."
           }
         ]
       },
       {
-        "key": "field_rules_tab",
-        "label": "Calculation rules",
+        "key": "field_form",
+        "label": "General form labels",
+        "name": "form",
+        "type": "group",
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_form_name_label",
+            "label": "Name — label",
+            "name": "name_label",
+            "type": "text",
+            "default_value": "Your name",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_form_name_placeholder",
+            "label": "Name — placeholder",
+            "name": "name_placeholder",
+            "type": "text",
+            "default_value": "e.g. Jordan Vance",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_form_company_label",
+            "label": "Company — label",
+            "name": "company_label",
+            "type": "text",
+            "default_value": "Company name",
+            "wrapper": { "width": "33" }
+          },
+          {
+            "key": "field_form_company_placeholder",
+            "label": "Company — placeholder",
+            "name": "company_placeholder",
+            "type": "text",
+            "default_value": "e.g. Company B.V.",
+            "wrapper": { "width": "33" }
+          },
+          {
+            "key": "field_form_company_hint",
+            "label": "Company — hint",
+            "name": "company_hint",
+            "type": "text",
+            "default_value": "Used to label your result.",
+            "wrapper": { "width": "34" }
+          },
+          {
+            "key": "field_form_industry_label",
+            "label": "Industry — label",
+            "name": "industry_label",
+            "type": "text",
+            "default_value": "Industry / sector",
+            "wrapper": { "width": "33" }
+          },
+          {
+            "key": "field_form_industry_placeholder",
+            "label": "Industry — placeholder",
+            "name": "industry_placeholder",
+            "type": "text",
+            "default_value": "Select your industry",
+            "wrapper": { "width": "33" }
+          },
+          {
+            "key": "field_form_industry_hint",
+            "label": "Industry — hint",
+            "name": "industry_hint",
+            "type": "text",
+            "default_value": "Flags if your sector typically has a CAO above the statutory minimum.",
+            "wrapper": { "width": "34" }
+          },
+          {
+            "key": "field_form_status_label",
+            "label": "Employment status — label",
+            "name": "status_label",
+            "type": "text",
+            "default_value": "Employment status",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_form_status_default",
+            "label": "Employment status — default option value",
+            "name": "status_default",
+            "type": "text",
+            "instructions": "Must match a Value in the options list below (e.g. employee).",
+            "default_value": "employee",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_form_status_options",
+            "label": "Employment status options",
+            "name": "status_options",
+            "type": "repeater",
+            "layout": "table",
+            "button_label": "+ Add option",
+            "sub_fields": [
+              {
+                "key": "field_form_status_value",
+                "label": "Value (internal)",
+                "name": "value",
+                "type": "text",
+                "placeholder": "employee",
+                "wrapper": { "width": "40" }
+              },
+              {
+                "key": "field_form_status_label_row",
+                "label": "Label (shown to user)",
+                "name": "label",
+                "type": "text",
+                "placeholder": "Employee",
+                "wrapper": { "width": "60" }
+              }
+            ]
+          },
+          {
+            "key": "field_form_first_day_label",
+            "label": "First day of sick leave — label",
+            "name": "first_day_label",
+            "type": "text",
+            "default_value": "First day of sick leave",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_form_first_day_hint",
+            "label": "First day — hint",
+            "name": "first_day_hint",
+            "type": "text",
+            "default_value": "We'll work out the week number for you.",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_form_last_day_label",
+            "label": "Last day — label",
+            "name": "last_day_label",
+            "type": "text",
+            "default_value": "Last day (leave blank if still off)"
+          },
+          {
+            "key": "field_form_linked_label",
+            "label": "Linked absence — toggle title",
+            "name": "linked_label",
+            "type": "text",
+            "default_value": "Linked earlier absence?"
+          },
+          {
+            "key": "field_form_linked_description",
+            "label": "Linked absence — explanation",
+            "name": "linked_description",
+            "type": "textarea",
+            "rows": 2,
+            "instructions": "Placeholders: {weeks} and {maxWeeks} (filled from Pay Rules automatically).",
+            "default_value": "A new absence within {weeks} weeks of the last one is legally linked — it counts toward the same {maxWeeks}-week limit."
+          },
+          {
+            "key": "field_form_linked_last_day_label",
+            "label": "Linked absence — previous last-day label",
+            "name": "linked_last_day_label",
+            "type": "text",
+            "default_value": "Last day of that earlier sick leave"
+          },
+          {
+            "key": "field_form_linked_flag_message",
+            "label": "Linked absences confirmed message",
+            "name": "linked_flag_message",
+            "type": "text",
+            "instructions": "Placeholder: {maxWeeks}.",
+            "default_value": "These absences are linked — they share one {maxWeeks}-week entitlement."
+          },
+          {
+            "key": "field_form_submit_label",
+            "label": "Submit button text",
+            "name": "submit_label",
+            "type": "text",
+            "default_value": "Calculate my entitlement"
+          }
+        ]
+      },
+      {
+        "key": "field_salary",
+        "label": "💰 Salary field (Gross monthly salary)",
+        "name": "salary",
+        "type": "group",
+        "layout": "block",
+        "instructions": "Controls the Gross Monthly Salary input on the website.",
+        "sub_fields": [
+          {
+            "key": "field_salary_label",
+            "label": "Field label",
+            "name": "label",
+            "type": "text",
+            "default_value": "Gross monthly salary (€)",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_salary_placeholder",
+            "label": "Placeholder (grey hint text)",
+            "name": "placeholder",
+            "type": "text",
+            "default_value": "3200",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_salary_default",
+            "label": "Default value on page load",
+            "name": "default_value",
+            "type": "text",
+            "instructions": "Leave empty for a blank field. Example: 3200",
+            "default_value": "",
+            "wrapper": { "width": "25" }
+          },
+          {
+            "key": "field_salary_min",
+            "label": "Minimum allowed",
+            "name": "min",
+            "type": "number",
+            "default_value": 0,
+            "append": "€",
+            "wrapper": { "width": "25" }
+          },
+          {
+            "key": "field_salary_max",
+            "label": "Maximum allowed",
+            "name": "max",
+            "type": "number",
+            "default_value": 100000,
+            "append": "€",
+            "wrapper": { "width": "25" }
+          },
+          {
+            "key": "field_salary_step",
+            "label": "Step (increment)",
+            "name": "step",
+            "type": "number",
+            "default_value": 1,
+            "wrapper": { "width": "25" }
+          }
+        ]
+      },
+      {
+        "key": "field_hours",
+        "label": "⏱ Hours field (Contracted hours / week)",
+        "name": "hours",
+        "type": "group",
+        "layout": "block",
+        "instructions": "Controls the Contracted Hours per Week input on the website.",
+        "sub_fields": [
+          {
+            "key": "field_hours_label",
+            "label": "Field label",
+            "name": "label",
+            "type": "text",
+            "default_value": "Contracted hours / week",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_hours_placeholder",
+            "label": "Placeholder (grey hint text)",
+            "name": "placeholder",
+            "type": "text",
+            "default_value": "40",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_hours_default",
+            "label": "Default value on page load",
+            "name": "default_value",
+            "type": "text",
+            "default_value": "40",
+            "wrapper": { "width": "25" }
+          },
+          {
+            "key": "field_hours_min",
+            "label": "Minimum allowed",
+            "name": "min",
+            "type": "number",
+            "default_value": 1,
+            "append": "hrs",
+            "wrapper": { "width": "25" }
+          },
+          {
+            "key": "field_hours_max",
+            "label": "Maximum allowed",
+            "name": "max",
+            "type": "number",
+            "default_value": 60,
+            "append": "hrs",
+            "wrapper": { "width": "25" }
+          },
+          {
+            "key": "field_hours_step",
+            "label": "Step (increment)",
+            "name": "step",
+            "type": "number",
+            "default_value": 1,
+            "wrapper": { "width": "25" }
+          }
+        ]
+      },
+
+      {
+        "key": "field_tab_rules",
+        "label": "6. Pay Rules ⚡",
         "type": "tab"
       },
       {
-        "key": "field_rules_year1_percent",
-        "name": "rules_year1_percent",
-        "label": "Year 1 pay (% of gross)",
-        "type": "number",
-        "default_value": 100,
-        "min": 0,
-        "max": 100,
-        "instructions": "Statutory minimum is 70%; most contracts top this up to 100% in year 1."
+        "key": "field_msg_rules",
+        "label": "",
+        "name": "",
+        "type": "message",
+        "message": "<div style=\"padding:10px 14px;background:#fff8e6;border-left:4px solid #c9a227;border-radius:4px\"><p style=\"margin:0 0 8px\"><strong>These numbers power the calculator maths.</strong></p><p style=\"margin:0 0 8px\">If you change <strong>Year 1 sick pay</strong> from 100 to 75:</p><ul style=\"margin:0;padding-left:18px\"><li>Monthly Year 1 pay becomes salary × 75%</li><li>The result text becomes “Year 1 · 75% of gross”</li></ul><p style=\"margin:8px 0 0\">No code change needed — click Update on this page.</p></div>"
       },
       {
-        "key": "field_rules_year2_percent",
-        "name": "rules_year2_percent",
-        "label": "Year 2 pay (% of gross)",
-        "type": "number",
-        "default_value": 70,
-        "min": 0,
-        "max": 100
+        "key": "field_rules",
+        "label": "Statutory pay rules",
+        "name": "rules",
+        "type": "group",
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_rules_year1_percent",
+            "label": "Year 1 sick pay",
+            "name": "year1_percent",
+            "type": "number",
+            "instructions": "Percent of gross salary paid in year 1 of illness.",
+            "default_value": 100,
+            "min": 0,
+            "max": 100,
+            "append": "%",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_rules_year2_percent",
+            "label": "Year 2 sick pay",
+            "name": "year2_percent",
+            "type": "number",
+            "instructions": "Percent of gross salary paid in year 2 of illness.",
+            "default_value": 70,
+            "min": 0,
+            "max": 100,
+            "append": "%",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_rules_max_weeks",
+            "label": "Maximum entitlement",
+            "name": "max_weeks",
+            "type": "number",
+            "instructions": "Usually 104 weeks (2 years).",
+            "default_value": 104,
+            "append": "weeks",
+            "wrapper": { "width": "33" }
+          },
+          {
+            "key": "field_rules_waiting_days",
+            "label": "Waiting days (wachtdag)",
+            "name": "waiting_days",
+            "type": "number",
+            "instructions": "Unpaid days at the start of sick leave.",
+            "default_value": 1,
+            "append": "days",
+            "wrapper": { "width": "33" }
+          },
+          {
+            "key": "field_rules_linked_absence_days",
+            "label": "Linked-absence window",
+            "name": "linked_absence_days",
+            "type": "number",
+            "instructions": "If two absences are closer than this, they share one entitlement. Statutory default: 28 days.",
+            "default_value": 28,
+            "append": "days",
+            "wrapper": { "width": "34" }
+          },
+          {
+            "key": "field_rules_min_wage_monthly",
+            "label": "Statutory minimum wage (monthly)",
+            "name": "min_wage_monthly",
+            "type": "number",
+            "instructions": "Update when the Dutch government revises minimum wage (Jan / Jul).",
+            "default_value": 2437,
+            "prepend": "€",
+            "append": "/ month"
+          }
+        ]
       },
+
       {
-        "key": "field_rules_max_weeks",
-        "name": "rules_max_weeks",
-        "label": "Max entitlement (weeks)",
-        "type": "number",
-        "default_value": 104
-      },
-      {
-        "key": "field_rules_waiting_days",
-        "name": "rules_waiting_days",
-        "label": "Waiting day(s) (wachtdag)",
-        "type": "number",
-        "default_value": 1
-      },
-      {
-        "key": "field_rules_min_wage_monthly",
-        "name": "rules_min_wage_monthly",
-        "label": "Statutory minimum wage / month (EUR)",
-        "type": "number",
-        "default_value": 2437,
-        "instructions": "Update twice a year (Jan/Jul) when the Dutch government revises minimum wage."
-      },
-      {
-        "key": "field_rules_linked_absence_days",
-        "name": "rules_linked_absence_days",
-        "label": "Linked-absence window (days)",
-        "type": "number",
-        "default_value": 28,
-        "instructions": "Statutory: 28 days (4 weeks). Two absences closer together than this share one entitlement."
-      },
-      {
-        "key": "field_how_it_works_tab",
-        "label": "How it works",
+        "key": "field_tab_result",
+        "label": "7. Result Display",
         "type": "tab"
+      },
+      {
+        "key": "field_msg_result",
+        "label": "",
+        "name": "",
+        "type": "message",
+        "message": "<p>Labels on the dark result card. For Year 1 / Year 2 titles, use <code>{percent}</code> — it is replaced automatically with the Pay Rules percentages (so you never type the number twice).</p>"
+      },
+      {
+        "key": "field_result",
+        "label": "Result card labels",
+        "name": "result",
+        "type": "group",
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_result_kicker",
+            "label": "Card kicker (small top label)",
+            "name": "kicker",
+            "type": "text",
+            "default_value": "Your entitlement"
+          },
+          {
+            "key": "field_result_year1_title",
+            "label": "Year 1 title under the big amount",
+            "name": "year1_title",
+            "type": "text",
+            "instructions": "Use {percent}. Example: Year 1 · {percent}% of gross (statutory)",
+            "default_value": "Year 1 · {percent}% of gross (statutory)"
+          },
+          {
+            "key": "field_result_year2_title",
+            "label": "Year 2 row title",
+            "name": "year2_title",
+            "type": "text",
+            "instructions": "Use {percent}. Example: Year 2 · {percent}% of gross",
+            "default_value": "Year 2 · {percent}% of gross"
+          },
+          {
+            "key": "field_result_total_label",
+            "label": "Total / cumulative label",
+            "name": "total_label",
+            "type": "text",
+            "default_value": "Cumulative (24 mo)",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_result_monthly_label",
+            "label": "Monthly label",
+            "name": "monthly_label",
+            "type": "text",
+            "default_value": "Monthly",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_result_max_weeks_label",
+            "label": "Max weeks label",
+            "name": "max_weeks_label",
+            "type": "text",
+            "default_value": "Weeks remaining",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_result_waiting_days_label",
+            "label": "Waiting days label",
+            "name": "waiting_days_label",
+            "type": "text",
+            "default_value": "Waiting day(s)",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_result_waiting_days_value",
+            "label": "Waiting days value text",
+            "name": "waiting_days_value",
+            "type": "text",
+            "instructions": "Use {days}. Example: {days} day(s) (wachtdag)",
+            "default_value": "{days} day(s) (wachtdag)"
+          },
+          {
+            "key": "field_result_linked_absence_label",
+            "label": "Linked absence label",
+            "name": "linked_absence_label",
+            "type": "text",
+            "default_value": "Linked absence window"
+          },
+          {
+            "key": "field_result_empty_amount",
+            "label": "Empty amount (before user types salary)",
+            "name": "empty_amount",
+            "type": "text",
+            "default_value": "€ —",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_result_per_month_suffix",
+            "label": "Per-month suffix",
+            "name": "per_month_suffix",
+            "type": "text",
+            "default_value": "/mo",
+            "wrapper": { "width": "50" }
+          },
+          {
+            "key": "field_result_footnote",
+            "label": "Footnote under the card",
+            "name": "footnote",
+            "type": "textarea",
+            "rows": 2,
+            "default_value": "Based on Art. 7:629 of the Dutch Civil Code. CAO in your sector may raise the floor above statutory."
+          },
+          {
+            "key": "field_result_year2_pay_label",
+            "label": "Year 2 pay label (optional / legacy)",
+            "name": "year2_pay_label",
+            "type": "text",
+            "default_value": "Year 2 pay",
+            "instructions": "Usually unused — Year 2 row title above is preferred."
+          }
+        ]
+      },
+
+      {
+        "key": "field_tab_how",
+        "label": "8. How It Works",
+        "type": "tab"
+      },
+      {
+        "key": "field_how_section",
+        "label": "Section heading",
+        "name": "how_it_works_section",
+        "type": "group",
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_how_kicker",
+            "label": "Kicker",
+            "name": "kicker",
+            "type": "text",
+            "default_value": "02 · How it works",
+            "wrapper": { "width": "30" }
+          },
+          {
+            "key": "field_how_title",
+            "label": "Heading",
+            "name": "title",
+            "type": "text",
+            "default_value": "Three tools, one source of truth.",
+            "wrapper": { "width": "70" }
+          }
+        ]
       },
       {
         "key": "field_how_it_works",
+        "label": "Steps",
         "name": "how_it_works",
-        "label": "How it works (3 steps)",
         "type": "repeater",
         "layout": "block",
-        "min": 3,
-        "max": 3,
-        "button_label": "Add step",
+        "min": 1,
+        "max": 6,
+        "button_label": "+ Add step",
         "sub_fields": [
           {
             "key": "field_step_number",
-            "name": "step_number",
-            "label": "Number",
+            "label": "Step number",
+            "name": "number",
             "type": "text",
-            "placeholder": "01"
+            "placeholder": "01",
+            "wrapper": { "width": "20" }
           },
           {
             "key": "field_step_title",
-            "name": "step_title",
             "label": "Title",
-            "type": "text"
+            "name": "title",
+            "type": "text",
+            "wrapper": { "width": "80" }
           },
           {
             "key": "field_step_description",
-            "name": "step_description",
             "label": "Description",
+            "name": "description",
             "type": "textarea",
             "rows": 2
           }
         ]
       },
+
       {
-        "key": "field_misc_tab",
-        "label": "Misc",
+        "key": "field_tab_cta",
+        "label": "9. CTA & Disclaimer",
         "type": "tab"
       },
       {
-        "key": "field_policy_cta_title",
-        "name": "policy_cta_title",
-        "label": "Policy-analyser CTA title",
-        "type": "text",
-        "default_value": "Check your own policy"
-      },
-      {
-        "key": "field_policy_cta_description",
-        "name": "policy_cta_description",
-        "label": "Policy-analyser CTA description",
-        "type": "text",
-        "default_value": "Upload contract / CAO \u2014 AI checks it against Dutch rules."
+        "key": "field_policy_cta",
+        "label": "Policy analyser call-to-action",
+        "name": "policy_cta",
+        "type": "group",
+        "layout": "block",
+        "instructions": "Card under the result that links to the Policy analyser tool.",
+        "sub_fields": [
+          {
+            "key": "field_policy_cta_title",
+            "label": "Title",
+            "name": "title",
+            "type": "text",
+            "default_value": "Check your own policy"
+          },
+          {
+            "key": "field_policy_cta_description",
+            "label": "Description",
+            "name": "description",
+            "type": "text",
+            "default_value": "Upload contract / CAO — AI checks it against Dutch rules."
+          }
+        ]
       },
       {
         "key": "field_disclaimer_text",
+        "label": "Disclaimer (under the form)",
         "name": "disclaimer_text",
-        "label": "Disclaimer text",
         "type": "text",
-        "default_value": "Illustrative estimate \u2014 not legal advice."
+        "default_value": "Illustrative estimate — not legal advice.",
+        "instructions": "Shown next to the Calculate button."
       }
     ],
     "location": [
       [
         {
-          "param": "options_page",
+          "param": "page",
           "operator": "==",
-          "value": "acf-options-calculator-settings"
+          "value": "calculate"
         }
       ]
     ],
     "menu_order": 0,
-    "position": "normal",
+    "position": "acf_after_title",
     "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": ["the_content", "excerpt", "discussion", "comments", "revisions", "slug", "author", "format", "featured_image", "categories", "tags", "send-trackbacks"],
     "active": true,
-    "description": "Content and legal-rule numbers for the sick leave calculator homepage. See ACF-INTEGRATION.md in the same folder for setup steps."
+    "show_in_rest": 1,
+    "description": "Client-friendly content editor for the Calculate page. Tabs: Hero → Statistics → Preview → Industries → Form → Pay Rules → Results → How it works → CTA. Attach to the Page with slug “calculate”. Enable Show in REST API."
   }
 ]

@@ -1,17 +1,19 @@
 /**
  * HowItWorks.jsx — Calculate page
- * The "3 tools, one source of truth" cards. Content from ACF "how_it_works"
- * repeater.
+ * Section heading + step cards — all from ACF (`how_it_works` repeater +
+ * how_it_works_kicker / how_it_works_title).
  */
 export function HowItWorks({ content }) {
+  const section = content.howItWorksSection;
+
   return (
     <section className="border-t border-border/70 bg-secondary/40">
       <div className="mx-auto max-w-6xl px-6 py-16">
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
-          02 · How it works
+          {section.kicker}
         </p>
         <h2 className="mt-2 max-w-2xl font-serif text-3xl tracking-tight sm:text-4xl">
-          Three tools, one source of truth.
+          {section.title}
         </h2>
 
         <div className="mt-10 grid gap-4 md:grid-cols-3">
