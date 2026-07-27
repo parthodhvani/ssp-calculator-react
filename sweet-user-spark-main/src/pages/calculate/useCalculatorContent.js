@@ -1,18 +1,16 @@
 /**
  * useCalculatorContent.js
  * ---------------------------------------------------------------------------
- * Fetches ACF from the WordPress Calculate page and maps it onto DEFAULT_CONTENT.
+ * Fetches ACF from WP page slug=calculate and maps it onto DEFAULT_CONTENT.
  *
- * Endpoint:
- *   GET {VITE_WP_API_URL}/wp-json/wp/v2/pages?slug=calculate&_fields=id,slug,acf
+ * Supports the final step-by-step ACF structure:
+ *   hero (group), sample (group), stats, section,
+ *   flat form_* / salary_* / hours_* fields (line-by-line in admin),
+ *   industries (inside Calculator Form tab),
+ *   rules (group), result (group, includes policy button + link),
+ *   how_it_works_section, how_it_works
  *
- * ACF is organised into client-friendly groups (see wp-acf/acf-field-group.json):
- *   hero, sample, section, form, salary, hours, rules, result,
- *   how_it_works_section, policy_cta
- * plus repeaters: stats, industries, how_it_works
- *
- * The mapper also accepts the older flat field names (hero_badge, rules_year1_percent,
- * calculator_salary_label, …) so existing WP installs keep working.
+ * Also accepts older nested/flat shapes for backwards compatibility.
  *
  * Returns: { content, isLoading, isFallback, error }
  * ---------------------------------------------------------------------------
@@ -39,7 +37,6 @@ function str(value, fallback) {
   return String(value);
 }
 
-/** First non-empty value among candidates. */
 function first(...candidates) {
   for (const v of candidates) {
     if (v != null && v !== "") return v;
@@ -47,16 +44,12 @@ function first(...candidates) {
   return undefined;
 }
 
-/** Read a nested group object, or null. */
 function group(acf, name) {
   const g = acf?.[name];
   if (g && typeof g === "object" && !Array.isArray(g)) return g;
   return null;
 }
 
-/**
- * Map nested (preferred) + flat (legacy) ACF into the React content shape.
- */
 export function mapAcfResponseToContent(acf) {
   if (!acf || typeof acf !== "object") return {};
 
@@ -73,10 +66,24 @@ export function mapAcfResponseToContent(acf) {
   const policyG = group(acf, "policy_cta");
 
   // ── Hero ────────────────────────────────────────────────────────────────
-  if (heroG || acf.hero_badge || acf.hero_title_line1 || acf.hero_cta_label) {
+  if (
+    heroG ||
+    acf.hero_badge ||
+    acf.hero_badge_1 ||
+    acf.hero_title_line1 ||
+    acf.hero_cta_label
+  ) {
     const d = DEFAULT_CONTENT.hero;
+    const badge1 = first(
+      heroG?.badge_1,
+      acf.hero_badge_1,
+      heroG?.badge,
+      acf.hero_badge,
+    );
+    const badge2 = first(heroG?.badge_2, acf.hero_badge_2);
     content.hero = {
-      badge: str(first(heroG?.badge, acf.hero_badge), d.badge),
+      badge1: str(badge1, d.badge1),
+      badge2: str(badge2, d.badge2),
       titleLine1: str(first(heroG?.title_line1, acf.hero_title_line1), d.titleLine1),
       titleHighlight: str(
         first(heroG?.title_highlight, acf.hero_title_highlight),
@@ -85,9 +92,14 @@ export function mapAcfResponseToContent(acf) {
       titleSuffix: str(first(heroG?.title_suffix, acf.hero_title_suffix), d.titleSuffix),
       description: str(first(heroG?.description, acf.hero_description), d.description),
       ctaLabel: str(first(heroG?.cta_label, acf.hero_cta_label), d.ctaLabel),
+      ctaLink: str(first(heroG?.cta_link, acf.hero_cta_link), d.ctaLink),
       secondaryCtaLabel: str(
         first(heroG?.secondary_cta_label, acf.hero_secondary_cta_label),
         d.secondaryCtaLabel,
+      ),
+      secondaryCtaLink: str(
+        first(heroG?.secondary_cta_link, acf.hero_secondary_cta_link),
+        d.secondaryCtaLink,
       ),
     };
   }
@@ -100,13 +112,8 @@ export function mapAcfResponseToContent(acf) {
     }));
   }
 
-  // ── Sample preview card ─────────────────────────────────────────────────
-  if (
-    sampleG ||
-    acf.sample_amount != null ||
-    acf.sample_title ||
-    acf.sample_period_label
-  ) {
+  // ── Sample card ─────────────────────────────────────────────────────────
+  if (sampleG || acf.sample_amount != null || acf.sample_title) {
     const d = DEFAULT_CONTENT.sampleResult;
     content.sampleResult = {
       title: str(first(sampleG?.title, acf.sample_title), d.title),
@@ -146,14 +153,14 @@ export function mapAcfResponseToContent(acf) {
     };
   }
 
-  // ── Industries ──────────────────────────────────────────────────────────
+  // ── Industries (lives inside Calculator Form tab) ───────────────────────
   if (Array.isArray(acf.industries) && acf.industries.length > 0) {
     content.industries = acf.industries
       .map((row) => first(row.name, row.industry_name))
       .filter(Boolean);
   }
 
-  // ── Section heading ─────────────────────────────────────────────────────
+  // ── Section ─────────────────────────────────────────────────────────────
   if (sectionG || acf.section_kicker || acf.section_title) {
     const d = DEFAULT_CONTENT.section;
     content.section = {
@@ -166,168 +173,249 @@ export function mapAcfResponseToContent(acf) {
     };
   }
 
-  // ── Calculator form (form + salary + hours groups) ──────────────────────
+  // ── Calculator form (flat line-by-line fields + legacy groups) ──────────
   const hasForm =
     formG ||
     salaryG ||
     hoursG ||
+    acf.form_name_label ||
+    acf.salary_label ||
+    acf.hours_label ||
     acf.calculator_salary_label ||
-    acf.calculator_hours_label ||
-    acf.calculator_name_label ||
+    acf.form_submit_label ||
     acf.calculator_submit_label;
 
   if (hasForm) {
     const d = DEFAULT_CONTENT.calculator;
 
     let statusOptions = d.statusOptions;
-    const rawStatus = formG?.status_options ?? acf.calculator_status_options;
+    const rawStatus =
+      acf.form_status_options ?? formG?.status_options ?? acf.calculator_status_options;
     if (Array.isArray(rawStatus) && rawStatus.length > 0) {
-      statusOptions = rawStatus
+      const mapped = rawStatus
         .map((row) => ({
           value: first(row.value, row.status_value) ?? "",
           label: first(row.label, row.status_label) ?? "",
         }))
         .filter((o) => o.value && o.label);
-      if (statusOptions.length === 0) statusOptions = d.statusOptions;
+      if (mapped.length) statusOptions = mapped;
     }
 
     content.calculator = {
       nameLabel: str(
-        first(formG?.name_label, acf.calculator_name_label),
+        first(acf.form_name_label, formG?.name_label, acf.calculator_name_label),
         d.nameLabel,
       ),
       namePlaceholder: str(
-        first(formG?.name_placeholder, acf.calculator_name_placeholder),
+        first(
+          acf.form_name_placeholder,
+          formG?.name_placeholder,
+          acf.calculator_name_placeholder,
+        ),
         d.namePlaceholder,
       ),
       companyLabel: str(
-        first(formG?.company_label, acf.calculator_company_label),
+        first(
+          acf.form_company_label,
+          formG?.company_label,
+          acf.calculator_company_label,
+        ),
         d.companyLabel,
       ),
       companyPlaceholder: str(
-        first(formG?.company_placeholder, acf.calculator_company_placeholder),
+        first(
+          acf.form_company_placeholder,
+          formG?.company_placeholder,
+          acf.calculator_company_placeholder,
+        ),
         d.companyPlaceholder,
       ),
       companyHint: str(
-        first(formG?.company_hint, acf.calculator_company_hint),
+        first(acf.form_company_hint, formG?.company_hint, acf.calculator_company_hint),
         d.companyHint,
       ),
       industryLabel: str(
-        first(formG?.industry_label, acf.calculator_industry_label),
+        first(
+          acf.form_industry_label,
+          formG?.industry_label,
+          acf.calculator_industry_label,
+        ),
         d.industryLabel,
       ),
       industryPlaceholder: str(
-        first(formG?.industry_placeholder, acf.calculator_industry_placeholder),
+        first(
+          acf.form_industry_placeholder,
+          formG?.industry_placeholder,
+          acf.calculator_industry_placeholder,
+        ),
         d.industryPlaceholder,
       ),
       industryHint: str(
-        first(formG?.industry_hint, acf.calculator_industry_hint),
+        first(
+          acf.form_industry_hint,
+          formG?.industry_hint,
+          acf.calculator_industry_hint,
+        ),
         d.industryHint,
       ),
       statusLabel: str(
-        first(formG?.status_label, acf.calculator_status_label),
+        first(acf.form_status_label, formG?.status_label, acf.calculator_status_label),
         d.statusLabel,
       ),
       statusOptions,
       statusDefault: str(
-        first(formG?.status_default, acf.calculator_status_default),
+        first(
+          acf.form_status_default,
+          formG?.status_default,
+          acf.calculator_status_default,
+        ),
         d.statusDefault,
       ),
 
       salaryLabel: str(
-        first(salaryG?.label, acf.calculator_salary_label),
+        first(acf.salary_label, salaryG?.label, acf.calculator_salary_label),
         d.salaryLabel,
       ),
       salaryPlaceholder: str(
-        first(salaryG?.placeholder, acf.calculator_salary_placeholder),
+        first(
+          acf.salary_placeholder,
+          salaryG?.placeholder,
+          acf.calculator_salary_placeholder,
+        ),
         d.salaryPlaceholder,
       ),
       salaryDefault: str(
-        first(salaryG?.default_value, acf.calculator_salary_default),
+        first(
+          acf.salary_default,
+          salaryG?.default_value,
+          acf.calculator_salary_default,
+        ),
         d.salaryDefault,
       ),
-      salaryMin: num(first(salaryG?.min, acf.calculator_salary_min), d.salaryMin),
-      salaryMax: num(first(salaryG?.max, acf.calculator_salary_max), d.salaryMax),
-      salaryStep: num(first(salaryG?.step, acf.calculator_salary_step), d.salaryStep),
+      salaryMin: num(
+        first(acf.salary_min, salaryG?.min, acf.calculator_salary_min),
+        d.salaryMin,
+      ),
+      salaryMax: num(
+        first(acf.salary_max, salaryG?.max, acf.calculator_salary_max),
+        d.salaryMax,
+      ),
+      salaryStep: num(
+        first(acf.salary_step, salaryG?.step, acf.calculator_salary_step),
+        d.salaryStep,
+      ),
 
       hoursLabel: str(
-        first(hoursG?.label, acf.calculator_hours_label),
+        first(acf.hours_label, hoursG?.label, acf.calculator_hours_label),
         d.hoursLabel,
       ),
       hoursPlaceholder: str(
-        first(hoursG?.placeholder, acf.calculator_hours_placeholder),
+        first(
+          acf.hours_placeholder,
+          hoursG?.placeholder,
+          acf.calculator_hours_placeholder,
+        ),
         d.hoursPlaceholder,
       ),
       hoursDefault: str(
-        first(hoursG?.default_value, acf.calculator_hours_default),
+        first(acf.hours_default, hoursG?.default_value, acf.calculator_hours_default),
         d.hoursDefault,
       ),
-      hoursMin: num(first(hoursG?.min, acf.calculator_hours_min), d.hoursMin),
-      hoursMax: num(first(hoursG?.max, acf.calculator_hours_max), d.hoursMax),
-      hoursStep: num(first(hoursG?.step, acf.calculator_hours_step), d.hoursStep),
+      hoursMin: num(
+        first(acf.hours_min, hoursG?.min, acf.calculator_hours_min),
+        d.hoursMin,
+      ),
+      hoursMax: num(
+        first(acf.hours_max, hoursG?.max, acf.calculator_hours_max),
+        d.hoursMax,
+      ),
+      hoursStep: num(
+        first(acf.hours_step, hoursG?.step, acf.calculator_hours_step),
+        d.hoursStep,
+      ),
 
       firstDayLabel: str(
-        first(formG?.first_day_label, acf.calculator_first_day_label),
+        first(
+          acf.form_first_day_label,
+          formG?.first_day_label,
+          acf.calculator_first_day_label,
+        ),
         d.firstDayLabel,
       ),
       firstDayHint: str(
-        first(formG?.first_day_hint, acf.calculator_first_day_hint),
+        first(
+          acf.form_first_day_hint,
+          formG?.first_day_hint,
+          acf.calculator_first_day_hint,
+        ),
         d.firstDayHint,
       ),
       lastDayLabel: str(
-        first(formG?.last_day_label, acf.calculator_last_day_label),
+        first(
+          acf.form_last_day_label,
+          formG?.last_day_label,
+          acf.calculator_last_day_label,
+        ),
         d.lastDayLabel,
       ),
       linkedLabel: str(
-        first(formG?.linked_label, acf.calculator_linked_label),
+        first(acf.form_linked_label, formG?.linked_label, acf.calculator_linked_label),
         d.linkedLabel,
       ),
       linkedDescription: str(
-        first(formG?.linked_description, acf.calculator_linked_description),
+        first(
+          acf.form_linked_description,
+          formG?.linked_description,
+          acf.calculator_linked_description,
+        ),
         d.linkedDescription,
       ),
       linkedLastDayLabel: str(
-        first(formG?.linked_last_day_label, acf.calculator_linked_last_day_label),
+        first(
+          acf.form_linked_last_day_label,
+          formG?.linked_last_day_label,
+          acf.calculator_linked_last_day_label,
+        ),
         d.linkedLastDayLabel,
       ),
       linkedFlagMessage: str(
-        first(formG?.linked_flag_message, acf.calculator_linked_flag_message),
+        first(
+          acf.form_linked_flag_message,
+          formG?.linked_flag_message,
+          acf.calculator_linked_flag_message,
+        ),
         d.linkedFlagMessage,
       ),
       submitLabel: str(
-        first(formG?.submit_label, acf.calculator_submit_label),
+        first(
+          acf.form_submit_label,
+          formG?.submit_label,
+          acf.calculator_submit_label,
+        ),
         d.submitLabel,
+      ),
+      submitLink: str(
+        first(acf.form_submit_link, formG?.submit_link, acf.calculator_submit_link),
+        d.submitLink,
       ),
     };
   }
 
-  // ── Pay rules (single source of truth for maths + displayed %) ──────────
+  // ── Pay rules ───────────────────────────────────────────────────────────
   if (
     rulesG ||
     acf.rules_year1_percent != null ||
     acf.year1_percentage != null ||
-    acf.rules_year2_percent != null ||
-    acf.rules_max_weeks != null ||
-    acf.rules_waiting_days != null ||
-    acf.rules_min_wage_monthly != null ||
-    acf.rules_linked_absence_days != null
+    acf.rules_max_weeks != null
   ) {
     const d = DEFAULT_CONTENT.rules;
     content.rules = {
       year1Percent: num(
-        first(
-          rulesG?.year1_percent,
-          acf.rules_year1_percent,
-          acf.year1_percentage,
-        ),
+        first(rulesG?.year1_percent, acf.rules_year1_percent, acf.year1_percentage),
         d.year1Percent,
       ),
       year2Percent: num(
-        first(
-          rulesG?.year2_percent,
-          acf.rules_year2_percent,
-          acf.year2_percentage,
-        ),
+        first(rulesG?.year2_percent, acf.rules_year2_percent, acf.year2_percentage),
         d.year2Percent,
       ),
       maxWeeks: num(first(rulesG?.max_weeks, acf.rules_max_weeks), d.maxWeeks),
@@ -346,13 +434,8 @@ export function mapAcfResponseToContent(acf) {
     };
   }
 
-  // ── Result card ─────────────────────────────────────────────────────────
-  if (
-    resultG ||
-    acf.year1_result_title ||
-    acf.result_total_label ||
-    acf.result_kicker
-  ) {
+  // ── Result card (+ policy button living inside this tab) ────────────────
+  if (resultG || acf.year1_result_title || acf.result_kicker || acf.result_total_label) {
     const d = DEFAULT_CONTENT.result;
     content.result = {
       kicker: str(first(resultG?.kicker, acf.result_kicker), d.kicker),
@@ -376,10 +459,7 @@ export function mapAcfResponseToContent(acf) {
         first(resultG?.year2_pay_label, acf.result_year2_pay_label),
         d.year2PayLabel,
       ),
-      totalLabel: str(
-        first(resultG?.total_label, acf.result_total_label),
-        d.totalLabel,
-      ),
+      totalLabel: str(first(resultG?.total_label, acf.result_total_label), d.totalLabel),
       monthlyLabel: str(
         first(resultG?.monthly_label, acf.result_monthly_label),
         d.monthlyLabel,
@@ -402,6 +482,42 @@ export function mapAcfResponseToContent(acf) {
       ),
       footnote: str(first(resultG?.footnote, acf.result_footnote), d.footnote),
     };
+
+    // Policy CTA is edited inside the Result tab
+    content.policyAnalyserCta = {
+      title: str(
+        first(
+          resultG?.policy_title,
+          policyG?.title,
+          acf.policy_cta_title,
+        ),
+        DEFAULT_CONTENT.policyAnalyserCta.title,
+      ),
+      description: str(
+        first(
+          resultG?.policy_description,
+          policyG?.description,
+          acf.policy_cta_description,
+        ),
+        DEFAULT_CONTENT.policyAnalyserCta.description,
+      ),
+      link: str(
+        first(resultG?.policy_link, policyG?.link, acf.policy_cta_link),
+        DEFAULT_CONTENT.policyAnalyserCta.link,
+      ),
+    };
+  } else if (policyG || acf.policy_cta_title) {
+    content.policyAnalyserCta = {
+      title: str(first(policyG?.title, acf.policy_cta_title), DEFAULT_CONTENT.policyAnalyserCta.title),
+      description: str(
+        first(policyG?.description, acf.policy_cta_description),
+        DEFAULT_CONTENT.policyAnalyserCta.description,
+      ),
+      link: str(
+        first(policyG?.link, acf.policy_cta_link),
+        DEFAULT_CONTENT.policyAnalyserCta.link,
+      ),
+    };
   }
 
   // ── How it works ────────────────────────────────────────────────────────
@@ -418,18 +534,6 @@ export function mapAcfResponseToContent(acf) {
       title: first(row.title, row.step_title) ?? "",
       description: first(row.description, row.step_description) ?? "",
     }));
-  }
-
-  // ── Policy CTA + disclaimer ─────────────────────────────────────────────
-  if (policyG || acf.policy_cta_title || acf.policy_cta_description) {
-    const d = DEFAULT_CONTENT.policyAnalyserCta;
-    content.policyAnalyserCta = {
-      title: str(first(policyG?.title, acf.policy_cta_title), d.title),
-      description: str(
-        first(policyG?.description, acf.policy_cta_description),
-        d.description,
-      ),
-    };
   }
 
   if (acf.disclaimer_text) {
@@ -490,9 +594,8 @@ export function useCalculatorContent() {
           return;
         }
 
-        const mapped = mapAcfResponseToContent(acf);
         if (!cancelled) {
-          setContent(mergeContent(mapped));
+          setContent(mergeContent(mapAcfResponseToContent(acf)));
           setIsFallback(false);
           setError(null);
         }

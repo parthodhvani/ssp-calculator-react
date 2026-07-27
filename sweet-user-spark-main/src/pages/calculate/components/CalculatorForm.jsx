@@ -1,7 +1,7 @@
 /**
  * CalculatorForm.jsx — Calculate page
- * Fully controlled form. Every label, placeholder, hint, default constraint,
- * and button string comes from `content` (ACF). No hardcoded copy.
+ * Line-by-line fields (one per row). Every label / placeholder / constraint
+ * and the submit button (+ optional link) come from ACF `content`.
  */
 import { CalendarDays, Info, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/shared/FormField";
-import { formatTemplate } from "../content";
+import { formatTemplate, resolveHref } from "../content";
 
 export function CalculatorForm({ content, form }) {
   const {
@@ -49,25 +49,37 @@ export function CalculatorForm({ content, form }) {
     maxWeeks: rules.maxWeeks,
   });
 
+  function handleSubmit(e) {
+    e.preventDefault();
+    const link = resolveHref(calc.submitLink, "");
+    if (link) {
+      if (link.startsWith("#")) {
+        document.querySelector(link)?.scrollIntoView({ behavior: "smooth" });
+      } else if (/^https?:\/\//i.test(link)) {
+        window.open(link, "_blank", "noopener,noreferrer");
+      } else {
+        window.location.href = link;
+      }
+    }
+  }
+
   return (
     <form
-      onSubmit={(e) => e.preventDefault()}
+      onSubmit={handleSubmit}
       className="rounded-2xl border border-border bg-card p-6 sm:p-8"
       style={{ boxShadow: "var(--shadow-card)" }}
     >
-      <div className="grid gap-5 sm:grid-cols-2">
+      {/* One field per row — line by line */}
+      <div className="flex flex-col gap-5">
         <FormField label={calc.nameLabel}>
           <Input placeholder={calc.namePlaceholder} />
         </FormField>
+
         <FormField label={calc.companyLabel} hint={calc.companyHint}>
           <Input placeholder={calc.companyPlaceholder} />
         </FormField>
 
-        <FormField
-          label={calc.industryLabel}
-          hint={calc.industryHint}
-          className="sm:col-span-2"
-        >
+        <FormField label={calc.industryLabel} hint={calc.industryHint}>
           <Select>
             <SelectTrigger>
               <SelectValue placeholder={calc.industryPlaceholder} />
@@ -82,7 +94,7 @@ export function CalculatorForm({ content, form }) {
           </Select>
         </FormField>
 
-        <FormField label={calc.statusLabel} className="sm:col-span-2">
+        <FormField label={calc.statusLabel}>
           <RadioGroup
             value={status}
             onValueChange={(v) => setStatus(v)}
@@ -116,6 +128,7 @@ export function CalculatorForm({ content, form }) {
             onChange={(e) => setSalary(e.target.value.replace(/[^\d.]/g, ""))}
           />
         </FormField>
+
         <FormField label={calc.hoursLabel}>
           <Input
             type="number"
@@ -139,6 +152,7 @@ export function CalculatorForm({ content, form }) {
             <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           </div>
         </FormField>
+
         <FormField label={calc.lastDayLabel}>
           <Input
             type="date"
@@ -147,7 +161,7 @@ export function CalculatorForm({ content, form }) {
           />
         </FormField>
 
-        <div className="sm:col-span-2">
+        <div>
           <div className="flex items-start justify-between gap-4 rounded-lg border border-border bg-secondary/40 p-4">
             <div>
               <p className="text-sm font-medium text-foreground">{calc.linkedLabel}</p>
