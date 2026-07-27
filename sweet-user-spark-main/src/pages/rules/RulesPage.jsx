@@ -1,15 +1,15 @@
 /**
  * RulesPage.jsx
  * ---------------------------------------------------------------------------
- * The "/rules" route. Import and render this from src/routes/rules.tsx.
+ * The "/rules" route. Copy from ACF via useRulesContent() (WP Rules page).
  * ---------------------------------------------------------------------------
  */
-import { DEFAULT_CONTENT } from "./content";
+import { useRulesContent } from "./useRulesContent";
 import { RuleCard } from "./components/RuleCard";
 import { CtaBanner } from "./components/CtaBanner";
 
 export function RulesPage() {
-  const content = DEFAULT_CONTENT;
+  const { content } = useRulesContent();
 
   return (
     <main className="mx-auto w-full max-w-4xl px-6 py-16 sm:py-20">
@@ -29,7 +29,14 @@ export function RulesPage() {
         ))}
       </div>
 
-      <CtaBanner title={content.ctaTitle} body={content.ctaBody} />
+      <CtaBanner
+        title={content.ctaTitle}
+        body={content.ctaBody}
+        primaryLabel={content.primaryCtaLabel}
+        primaryLink={content.primaryCtaLink}
+        secondaryLabel={content.secondaryCtaLabel}
+        secondaryLink={content.secondaryCtaLink}
+      />
     </main>
   );
 }

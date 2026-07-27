@@ -1,9 +1,8 @@
 /**
  * content.js — Rules page
  * ---------------------------------------------------------------------------
- * Reference content explaining the statutory rules. A good candidate for an
- * ACF repeater ("rules_sections": icon [select] / kicker / title / body /
- * refs [repeater of text]) if the WP dev wants this editable without code.
+ * Fallback content when WordPress/ACF is unreachable. Live copy comes from
+ * the Rules page ACF (see wp-acf/rules-acf-field-group.json).
  * ---------------------------------------------------------------------------
  */
 import { BookOpen, Scale, Clock, AlertTriangle } from "lucide-react";
@@ -46,4 +45,13 @@ export const DEFAULT_CONTENT = {
   ctaTitle: "Ready to see the numbers?",
   ctaBody:
     "Run your own case through the calculator, or upload a policy to see whether it clears the statutory floor.",
+  primaryCtaLabel: "Open calculator",
+  primaryCtaLink: "/",
+  secondaryCtaLabel: "Analyse a policy",
+  secondaryCtaLink: "/policy-analyser",
 };
+
+export function resolveHref(link, fallback = "#") {
+  if (link == null || String(link).trim() === "") return fallback;
+  return String(link).trim();
+}

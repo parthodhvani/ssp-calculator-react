@@ -1,15 +1,16 @@
 /**
  * BlogPage.jsx
  * ---------------------------------------------------------------------------
- * The "/blog" route. Import and render this from src/routes/blog.tsx.
+ * The "/blog" route. Header + posts from ACF via useBlogContent()
+ * (relationship field on the WP Blog page). First related post = featured.
  * ---------------------------------------------------------------------------
  */
-import { DEFAULT_CONTENT } from "./content";
+import { useBlogContent } from "./useBlogContent";
 import { FeaturedPost } from "./components/FeaturedPost";
 import { PostCard } from "./components/PostCard";
 
 export function BlogPage() {
-  const content = DEFAULT_CONTENT;
+  const { content } = useBlogContent();
   const [featured, ...rest] = content.posts;
 
   return (
@@ -24,15 +25,19 @@ export function BlogPage() {
         {content.description}
       </p>
 
-      <FeaturedPost post={featured} quote={content.featuredQuote} />
+      {featured ? (
+        <FeaturedPost post={featured} quote={content.featuredQuote} />
+      ) : null}
 
-      <ul className="mt-8 grid gap-4 sm:grid-cols-2">
-        {rest.map((post) => (
-          <li key={post.title}>
-            <PostCard post={post} />
-          </li>
-        ))}
-      </ul>
+      {rest.length > 0 ? (
+        <ul className="mt-8 grid gap-4 sm:grid-cols-2">
+          {rest.map((post) => (
+            <li key={post.id ?? post.slug ?? post.title}>
+              <PostCard post={post} />
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </main>
   );
 }

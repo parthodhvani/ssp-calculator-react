@@ -1,12 +1,9 @@
 /**
  * content.js — Blog page
  * ---------------------------------------------------------------------------
- * Demo posts. In a real headless setup, replace `DEFAULT_CONTENT.posts` with
- * a fetch to WP's native posts REST endpoint:
- *   GET {WP_URL}/wp-json/wp/v2/posts?_embed
- * and map { date, title, excerpt, tag, read } from the WP post object
- * (see /wp-acf/ACF-INTEGRATION.md for the pattern used elsewhere on this
- * site).
+ * Fallback content when WordPress/ACF is unreachable. Live header + posts
+ * come from the Blog page ACF relationship field (see
+ * wp-acf/blog-acf-field-group.json).
  * ---------------------------------------------------------------------------
  */
 

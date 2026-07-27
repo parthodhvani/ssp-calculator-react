@@ -1,0 +1,167 @@
+[
+  {
+    "key": "group_blog_page",
+    "title": "Blog Page — Edit Content",
+    "fields": [
+      {
+        "key": "field_blog_msg_welcome",
+        "label": "How to use",
+        "name": "",
+        "type": "message",
+        "message": "<div style=\"padding:12px 16px;background:#f0f6ff;border-left:4px solid #1e3a5f;border-radius:6px\"><p style=\"margin:0 0 8px\"><strong>Edit the Blog landing page here.</strong></p><p style=\"margin:0;color:#444\">Header + quote are edited below. <strong>Posts</strong> is a relationship field — pick which articles appear (first selected = featured). Create a WordPress page with slug <strong>blog</strong>, attach this group, then set <code>VITE_WP_BLOG_PAGE_ID</code> in React <code>.env</code>.</p></div>"
+      },
+
+      {
+        "key": "field_blog_tab_header",
+        "label": "① Page header",
+        "type": "tab",
+        "placement": "top"
+      },
+      {
+        "key": "field_blog_header",
+        "label": "Header",
+        "name": "header",
+        "type": "group",
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_blog_kicker",
+            "label": "Small kicker (above the title)",
+            "name": "kicker",
+            "type": "text",
+            "default_value": "Writing · Updated weekly"
+          },
+          {
+            "key": "field_blog_title",
+            "label": "Page title",
+            "name": "title",
+            "type": "text",
+            "default_value": "Notes from the sick-leave desk"
+          },
+          {
+            "key": "field_blog_description",
+            "label": "Description under the title",
+            "name": "description",
+            "type": "textarea",
+            "rows": 3,
+            "default_value": "Case law, CAO changes and the payroll edge cases we keep running into — written for employees and HR teams that want the actual answer."
+          }
+        ]
+      },
+
+      {
+        "key": "field_blog_tab_quote",
+        "label": "② Featured quote",
+        "type": "tab"
+      },
+      {
+        "key": "field_blog_featured_quote",
+        "label": "Quote on the featured post card",
+        "name": "featured_quote",
+        "type": "textarea",
+        "rows": 3,
+        "default_value": "The second opinion right is only useful if you know the seven-day window exists.",
+        "instructions": "Shown in the gradient panel next to the first (featured) post."
+      },
+
+      {
+        "key": "field_blog_tab_posts",
+        "label": "③ Posts",
+        "type": "tab"
+      },
+      {
+        "key": "field_blog_msg_posts",
+        "label": "",
+        "name": "",
+        "type": "message",
+        "message": "<p style=\"margin:0;padding:8px 12px;background:#f8fafc;border-radius:4px\">Select posts to show on this page. <strong>Order matters</strong> — the first post is the large featured article; the rest appear in the grid. Create normal WordPress posts first, then relate them here. Optional per-post fields (tag, read time) come from the <em>Blog Post Meta</em> field group.</p>"
+      },
+      {
+        "key": "field_blog_posts",
+        "label": "Related posts",
+        "name": "posts",
+        "type": "relationship",
+        "post_type": ["post"],
+        "taxonomy": "",
+        "filters": ["search", "post_type", "taxonomy"],
+        "elements": ["featured_image"],
+        "min": 0,
+        "max": 24,
+        "return_format": "object",
+        "instructions": "Drag to reorder. First = featured."
+      }
+    ],
+    "location": [
+      [
+        {
+          "param": "page",
+          "operator": "==",
+          "value": "blog"
+        }
+      ]
+    ],
+    "menu_order": 0,
+    "position": "acf_after_title",
+    "style": "seamless",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": [
+      "the_content",
+      "excerpt",
+      "discussion",
+      "comments",
+      "revisions",
+      "slug",
+      "author",
+      "format",
+      "featured_image",
+      "categories",
+      "tags",
+      "send-trackbacks"
+    ],
+    "active": true,
+    "show_in_rest": 1,
+    "description": "Blog landing page. Posts via ACF relationship. Create WP page slug blog, set VITE_WP_BLOG_PAGE_ID. Frontend fetches /wp-json/wp/v2/pages/{id}."
+  },
+  {
+    "key": "group_blog_post_meta",
+    "title": "Blog Post Meta",
+    "fields": [
+      {
+        "key": "field_blog_post_tag",
+        "label": "Tag label",
+        "name": "tag",
+        "type": "text",
+        "instructions": "Short label on the card (e.g. Case law, CAO, Explainer).",
+        "default_value": "Article",
+        "wrapper": { "width": "50" }
+      },
+      {
+        "key": "field_blog_post_read",
+        "label": "Read time",
+        "name": "read_time",
+        "type": "text",
+        "instructions": "Example: 6 min",
+        "default_value": "5 min",
+        "wrapper": { "width": "50" }
+      }
+    ],
+    "location": [
+      [
+        {
+          "param": "post_type",
+          "operator": "==",
+          "value": "post"
+        }
+      ]
+    ],
+    "menu_order": 0,
+    "position": "side",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "active": true,
+    "show_in_rest": 1,
+    "description": "Optional tag + read time on each blog post (used by the Blog page relationship mapping)."
+  }
+]
