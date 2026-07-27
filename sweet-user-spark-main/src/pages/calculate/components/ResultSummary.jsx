@@ -67,7 +67,7 @@ export function ResultSummary({ content, estimate }) {
         <p className="mt-1 text-sm text-primary-foreground/70">{year1Title}</p>
 
         <div className="mt-6 space-y-3 border-t border-primary-foreground/10 pt-5 text-sm">
-          <StatRow label={year2Title}>
+          <StatRow label={result.year2PayLabel}>
             {estimate
               ? `€ ${estimate.year2Monthly.toLocaleString("en")}${result.perMonthSuffix}`
               : "—"}
