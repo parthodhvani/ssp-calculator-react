@@ -1,23 +1,8 @@
 /**
- * useRulesContent.js
- * ---------------------------------------------------------------------------
- * Fetches ACF from the WordPress Rules page and merges onto DEFAULT_CONTENT
- * so the page never breaks if WP is unreachable.
- *
- * Configure in `.env`:
- *   VITE_WP_API_URL=https://devwp1.websiteserverhost.biz/ssp-calculator
- *   VITE_WP_RULES_PAGE_ID=<id>
- *
- * Endpoint:
- *   {VITE_WP_API_URL}/wp-json/wp/v2/pages/{ID}
- *
- * Returns: { content, isLoading, isFallback, error, endpoint }
- * ---------------------------------------------------------------------------
+ * useRulesContent.js — ACF only (no local default copy).
  */
-
 import { useEffect, useState } from "react";
 import { BookOpen, Scale, Clock, AlertTriangle } from "lucide-react";
-import { DEFAULT_CONTENT } from "./content";
 
 const WP_API_URL = import.meta.env.VITE_WP_API_URL;
 const PAGE_ID = import.meta.env.VITE_WP_RULES_PAGE_ID;
@@ -41,7 +26,7 @@ function buildAcfEndpoint() {
 
 const ACF_ENDPOINT = buildAcfEndpoint();
 
-function str(value, fallback) {
+function str(value, fallback = "") {
   if (value == null || value === "") return fallback;
   return String(value);
 }
@@ -79,118 +64,62 @@ function mapRefs(rawRefs) {
 }
 
 export function mapAcfResponseToContent(acf) {
-  if (!acf || typeof acf !== "object") return {};
+  if (!acf || typeof acf !== "object") return null;
 
-  const content = {};
   const headerG = group(acf, "header");
   const ctaG = group(acf, "cta");
-
-  if (
-    headerG ||
-    acf.kicker ||
-    acf.title ||
-    acf.description ||
-    acf.rules_kicker ||
-    acf.rules_title
-  ) {
-    content.kicker = str(
-      first(headerG?.kicker, acf.kicker, acf.rules_kicker),
-      DEFAULT_CONTENT.kicker,
-    );
-    content.title = str(
-      first(headerG?.title, acf.title, acf.rules_title),
-      DEFAULT_CONTENT.title,
-    );
-    content.description = str(
-      first(headerG?.description, acf.description, acf.rules_description),
-      DEFAULT_CONTENT.description,
-    );
-  }
-
   const rawSections = acf.sections || acf.rules_sections;
-  if (Array.isArray(rawSections) && rawSections.length > 0) {
-    content.sections = rawSections
-      .map((row) => ({
-        icon: resolveIcon(row.icon),
-        kicker: str(row.kicker, ""),
-        title: str(row.title, ""),
-        body: str(row.body, ""),
-        refs: mapRefs(row.refs),
-      }))
-      .filter((row) => row.title);
-  }
 
-  if (
-    ctaG ||
-    acf.cta_title ||
-    acf.ctaTitle ||
-    acf.primary_cta_label ||
-    acf.cta_body
-  ) {
-    content.ctaTitle = str(
-      first(ctaG?.title, acf.cta_title, acf.ctaTitle),
-      DEFAULT_CONTENT.ctaTitle,
-    );
-    content.ctaBody = str(
-      first(ctaG?.body, acf.cta_body, acf.ctaBody),
-      DEFAULT_CONTENT.ctaBody,
-    );
-    content.primaryCtaLabel = str(
-      first(ctaG?.primary_label, acf.primary_cta_label, acf.cta_primary_label),
-      DEFAULT_CONTENT.primaryCtaLabel,
-    );
-    content.primaryCtaLink = str(
-      first(ctaG?.primary_link, acf.primary_cta_link, acf.cta_primary_link),
-      DEFAULT_CONTENT.primaryCtaLink,
-    );
-    content.secondaryCtaLabel = str(
-      first(
-        ctaG?.secondary_label,
-        acf.secondary_cta_label,
-        acf.cta_secondary_label,
-      ),
-      DEFAULT_CONTENT.secondaryCtaLabel,
-    );
-    content.secondaryCtaLink = str(
-      first(
-        ctaG?.secondary_link,
-        acf.secondary_cta_link,
-        acf.cta_secondary_link,
-      ),
-      DEFAULT_CONTENT.secondaryCtaLink,
-    );
-  }
-
-  return content;
-}
-
-function mergeContent(mapped) {
   return {
-    ...DEFAULT_CONTENT,
-    ...mapped,
-    sections: mapped.sections ?? DEFAULT_CONTENT.sections,
+    kicker: str(first(headerG?.kicker, acf.kicker, acf.rules_kicker)),
+    title: str(first(headerG?.title, acf.title, acf.rules_title)),
+    description: str(
+      first(headerG?.description, acf.description, acf.rules_description),
+    ),
+    sections: Array.isArray(rawSections)
+      ? rawSections
+          .map((row) => ({
+            icon: resolveIcon(row.icon),
+            kicker: str(row.kicker),
+            title: str(row.title),
+            body: str(row.body),
+            refs: mapRefs(row.refs),
+          }))
+          .filter((row) => row.title)
+      : [],
+    ctaTitle: str(first(ctaG?.title, acf.cta_title, acf.ctaTitle)),
+    ctaBody: str(first(ctaG?.body, acf.cta_body, acf.ctaBody)),
+    primaryCtaLabel: str(
+      first(ctaG?.primary_label, acf.primary_cta_label, acf.cta_primary_label),
+    ),
+    primaryCtaLink: str(
+      first(ctaG?.primary_link, acf.primary_cta_link, acf.cta_primary_link),
+    ),
+    secondaryCtaLabel: str(
+      first(ctaG?.secondary_label, acf.secondary_cta_label, acf.cta_secondary_label),
+    ),
+    secondaryCtaLink: str(
+      first(ctaG?.secondary_link, acf.secondary_cta_link, acf.cta_secondary_link),
+    ),
   };
 }
 
 export function useRulesContent() {
-  const [content, setContent] = useState(DEFAULT_CONTENT);
+  const [content, setContent] = useState(null);
   const [isLoading, setIsLoading] = useState(Boolean(ACF_ENDPOINT));
-  const [isFallback, setIsFallback] = useState(!ACF_ENDPOINT);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(
+    ACF_ENDPOINT ? null : "Missing VITE_WP_API_URL / VITE_WP_RULES_PAGE_ID",
+  );
 
   useEffect(() => {
     if (!ACF_ENDPOINT) {
-      console.warn(
-        "[Rules] WP fetch skipped — VITE_WP_API_URL or page ID/slug missing.\n" +
-          "Set VITE_WP_API_URL and VITE_WP_RULES_PAGE_ID then restart Vite.",
-      );
+      setIsLoading(false);
       return;
     }
 
     let cancelled = false;
 
     async function load() {
-      console.info("[Rules] Fetching ACF from", ACF_ENDPOINT);
       try {
         const res = await fetch(ACF_ENDPOINT);
         if (!res.ok) throw new Error(`WP REST API responded ${res.status}`);
@@ -198,31 +127,22 @@ export function useRulesContent() {
         const page = Array.isArray(json) ? json[0] : json;
         const acf = page?.acf;
 
-        if (!acf || (typeof acf === "object" && Object.keys(acf).length === 0)) {
+        if (!acf || Object.keys(acf).length === 0) {
           if (!cancelled) {
-            setIsFallback(true);
+            setContent(null);
             setError("Rules page ACF fields are empty");
-            console.warn("[Rules] Page loaded but acf is empty — using DEFAULT_CONTENT");
           }
           return;
         }
 
         if (!cancelled) {
-          setContent(mergeContent(mapAcfResponseToContent(acf)));
-          setIsFallback(false);
+          setContent(mapAcfResponseToContent(acf));
           setError(null);
-          console.info("[Rules] ACF loaded OK", {
-            pageId: page?.id,
-            slug: page?.slug,
-            acfKeys: Object.keys(acf),
-          });
         }
       } catch (err) {
         if (!cancelled) {
-          const message = err instanceof Error ? err.message : "Failed to load WP content";
-          setIsFallback(true);
-          setError(message);
-          console.error("[Rules] ACF fetch failed — using DEFAULT_CONTENT:", message);
+          setContent(null);
+          setError(err instanceof Error ? err.message : "Failed to load WP content");
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -235,7 +155,7 @@ export function useRulesContent() {
     };
   }, []);
 
-  return { content, isLoading, isFallback, error, endpoint: ACF_ENDPOINT };
+  return { content, isLoading, error, endpoint: ACF_ENDPOINT };
 }
 
 export default useRulesContent;

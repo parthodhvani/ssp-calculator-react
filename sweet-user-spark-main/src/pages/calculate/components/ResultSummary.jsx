@@ -41,7 +41,7 @@ export function ResultSummary({ content, estimate }) {
   // When in year 2, still show a clear year line using current percent
   const headlineTitle =
     estimate?.currentYear === 2
-      ? formatTemplate(result.year2Title || "Year 2 · {percent}% of gross (statutory)", {
+      ? formatTemplate(result.year2Title, {
           percent,
         })
       : year1Title;
@@ -85,7 +85,7 @@ export function ResultSummary({ content, estimate }) {
           </StatRow>
           <StatRow label={result.waitingDaysLabel}>{waitingDaysValue}</StatRow>
           {estimate?.contractedHours != null && estimate.hourFactor !== 1 && (
-            <StatRow label={result.hoursAdjustedLabel || "Hours-adjusted salary"}>
+            <StatRow label={result.hoursAdjustedLabel}>
               {`€ ${estimate.effectiveMonthly.toLocaleString("en")}${result.perMonthSuffix}`}
             </StatRow>
           )}

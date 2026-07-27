@@ -1,7 +1,7 @@
 /**
  * useCalculatorContent.js
  * ---------------------------------------------------------------------------
- * Fetches ACF from the WordPress Calculate page and maps onto DEFAULT_CONTENT.
+ * Fetches ACF from the WordPress Calculate page (dynamic only — no local DEFAULT_CONTENT).
  *
  * Configure in `.env`:
  *   VITE_WP_API_URL=https://devwp1.websiteserverhost.biz/ssp-calculator
@@ -11,12 +11,11 @@
  * Example resolved URL:
  *   {VITE_WP_API_URL}/wp-json/wp/v2/pages/130
  *
- * Returns: { content, isLoading, isFallback, error }
+ * Returns: { content, isLoading, error, endpoint }
  * ---------------------------------------------------------------------------
  */
 
 import { useEffect, useState } from "react";
-import { DEFAULT_CONTENT } from "./content";
 
 const WP_API_URL = import.meta.env.VITE_WP_API_URL;
 const PAGE_ID = import.meta.env.VITE_WP_CALCULATE_PAGE_ID;
@@ -82,7 +81,6 @@ export function mapAcfResponseToContent(acf) {
     acf.hero_title_line1 ||
     acf.hero_cta_label
   ) {
-    const d = DEFAULT_CONTENT.hero;
     const badge1 = first(
       heroG?.badge_1,
       acf.hero_badge_1,
@@ -91,17 +89,17 @@ export function mapAcfResponseToContent(acf) {
     );
     const badge2 = first(heroG?.badge_2, acf.hero_badge_2);
     content.hero = {
-      badge1: str(badge1, d.badge1),
-      badge2: str(badge2, d.badge2),
-      titleLine1: str(first(heroG?.title_line1, acf.hero_title_line1), d.titleLine1),
+      badge1: str(badge1, ""),
+      badge2: str(badge2, ""),
+      titleLine1: str(first(heroG?.title_line1, acf.hero_title_line1), ""),
       titleHighlight: str(
         first(heroG?.title_highlight, acf.hero_title_highlight),
         d.titleHighlight,
       ),
-      titleSuffix: str(first(heroG?.title_suffix, acf.hero_title_suffix), d.titleSuffix),
-      description: str(first(heroG?.description, acf.hero_description), d.description),
-      ctaLabel: str(first(heroG?.cta_label, acf.hero_cta_label), d.ctaLabel),
-      ctaLink: str(first(heroG?.cta_link, acf.hero_cta_link), d.ctaLink),
+      titleSuffix: str(first(heroG?.title_suffix, acf.hero_title_suffix), ""),
+      description: str(first(heroG?.description, acf.hero_description), ""),
+      ctaLabel: str(first(heroG?.cta_label, acf.hero_cta_label), ""),
+      ctaLink: str(first(heroG?.cta_link, acf.hero_cta_link), ""),
       secondaryCtaLabel: str(
         first(heroG?.secondary_cta_label, acf.hero_secondary_cta_label),
         d.secondaryCtaLabel,
@@ -123,14 +121,13 @@ export function mapAcfResponseToContent(acf) {
 
   // ── Sample card ─────────────────────────────────────────────────────────
   if (sampleG || acf.sample_amount != null || acf.sample_title) {
-    const d = DEFAULT_CONTENT.sampleResult;
     content.sampleResult = {
-      title: str(first(sampleG?.title, acf.sample_title), d.title),
+      title: str(first(sampleG?.title, acf.sample_title), ""),
       coveredLabel: str(
         first(sampleG?.covered_label, acf.sample_covered_label),
         d.coveredLabel,
       ),
-      amount: num(first(sampleG?.amount, acf.sample_amount), d.amount),
+      amount: num(first(sampleG?.amount, acf.sample_amount), 0),
       periodLabel: str(
         first(sampleG?.period_label, acf.sample_period_label),
         d.periodLabel,
@@ -171,10 +168,9 @@ export function mapAcfResponseToContent(acf) {
 
   // ── Section ─────────────────────────────────────────────────────────────
   if (sectionG || acf.section_kicker || acf.section_title) {
-    const d = DEFAULT_CONTENT.section;
     content.section = {
-      kicker: str(first(sectionG?.kicker, acf.section_kicker), d.kicker),
-      title: str(first(sectionG?.title, acf.section_title), d.title),
+      kicker: str(first(sectionG?.kicker, acf.section_kicker), ""),
+      title: str(first(sectionG?.title, acf.section_title), ""),
       description: str(
         first(sectionG?.description, acf.section_description),
         d.description,
@@ -195,9 +191,8 @@ export function mapAcfResponseToContent(acf) {
     acf.calculator_submit_label;
 
   if (hasForm) {
-    const d = DEFAULT_CONTENT.calculator;
 
-    let statusOptions = d.statusOptions;
+    let statusOptions = [];
     const rawStatus =
       acf.form_status_options ?? formG?.status_options ?? acf.calculator_status_options;
     if (Array.isArray(rawStatus) && rawStatus.length > 0) {
@@ -425,7 +420,6 @@ export function mapAcfResponseToContent(acf) {
     acf.year1_percentage != null ||
     acf.rules_max_weeks != null
   ) {
-    const d = DEFAULT_CONTENT.rules;
     content.rules = {
       year1Percent: num(
         first(rulesG?.year1_percent, acf.rules_year1_percent, acf.year1_percentage),
@@ -435,7 +429,7 @@ export function mapAcfResponseToContent(acf) {
         first(rulesG?.year2_percent, acf.rules_year2_percent, acf.year2_percentage),
         d.year2Percent,
       ),
-      maxWeeks: num(first(rulesG?.max_weeks, acf.rules_max_weeks), d.maxWeeks),
+      maxWeeks: num(first(rulesG?.max_weeks, acf.rules_max_weeks), 0),
       waitingDays: num(
         first(rulesG?.waiting_days, acf.rules_waiting_days),
         d.waitingDays,
@@ -457,9 +451,8 @@ export function mapAcfResponseToContent(acf) {
 
   // ── Result card (+ policy button living inside this tab) ────────────────
   if (resultG || acf.year1_result_title || acf.result_kicker || acf.result_total_label) {
-    const d = DEFAULT_CONTENT.result;
     content.result = {
-      kicker: str(first(resultG?.kicker, acf.result_kicker), d.kicker),
+      kicker: str(first(resultG?.kicker, acf.result_kicker), ""),
       emptyAmount: str(
         first(resultG?.empty_amount, acf.result_empty_amount),
         d.emptyAmount,
@@ -480,7 +473,7 @@ export function mapAcfResponseToContent(acf) {
         first(resultG?.year2_pay_label, acf.result_year2_pay_label),
         d.year2PayLabel,
       ),
-      totalLabel: str(first(resultG?.total_label, acf.result_total_label), d.totalLabel),
+      totalLabel: str(first(resultG?.total_label, acf.result_total_label), ""),
       monthlyLabel: str(
         first(resultG?.monthly_label, acf.result_monthly_label),
         d.monthlyLabel,
@@ -505,7 +498,7 @@ export function mapAcfResponseToContent(acf) {
         first(resultG?.hours_adjusted_label, acf.result_hours_adjusted_label),
         d.hoursAdjustedLabel,
       ),
-      footnote: str(first(resultG?.footnote, acf.result_footnote), d.footnote),
+      footnote: str(first(resultG?.footnote, acf.result_footnote), ""),
     };
 
     // Policy CTA is edited inside the Result tab
@@ -516,7 +509,7 @@ export function mapAcfResponseToContent(acf) {
           policyG?.title,
           acf.policy_cta_title,
         ),
-        DEFAULT_CONTENT.policyAnalyserCta.title,
+        "",
       ),
       description: str(
         first(
@@ -524,33 +517,32 @@ export function mapAcfResponseToContent(acf) {
           policyG?.description,
           acf.policy_cta_description,
         ),
-        DEFAULT_CONTENT.policyAnalyserCta.description,
+        "",
       ),
       link: str(
         first(resultG?.policy_link, policyG?.link, acf.policy_cta_link),
-        DEFAULT_CONTENT.policyAnalyserCta.link,
+        "",
       ),
     };
   } else if (policyG || acf.policy_cta_title) {
     content.policyAnalyserCta = {
-      title: str(first(policyG?.title, acf.policy_cta_title), DEFAULT_CONTENT.policyAnalyserCta.title),
+      title: str(first(policyG?.title, acf.policy_cta_title), ""),
       description: str(
         first(policyG?.description, acf.policy_cta_description),
-        DEFAULT_CONTENT.policyAnalyserCta.description,
+        "",
       ),
       link: str(
         first(policyG?.link, acf.policy_cta_link),
-        DEFAULT_CONTENT.policyAnalyserCta.link,
+        "",
       ),
     };
   }
 
   // ── How it works ────────────────────────────────────────────────────────
   if (howSecG || acf.how_it_works_kicker || acf.how_it_works_title) {
-    const d = DEFAULT_CONTENT.howItWorksSection;
     content.howItWorksSection = {
-      kicker: str(first(howSecG?.kicker, acf.how_it_works_kicker), d.kicker),
-      title: str(first(howSecG?.title, acf.how_it_works_title), d.title),
+      kicker: str(first(howSecG?.kicker, acf.how_it_works_kicker), ""),
+      title: str(first(howSecG?.title, acf.how_it_works_title), ""),
     };
   }
   if (Array.isArray(acf.how_it_works) && acf.how_it_works.length > 0) {
@@ -562,52 +554,126 @@ export function mapAcfResponseToContent(acf) {
   }
 
   if (acf.disclaimer_text) {
-    content.disclaimer = str(acf.disclaimer_text, DEFAULT_CONTENT.disclaimer);
+    content.disclaimer = str(acf.disclaimer_text, "");
   }
 
   return content;
 }
 
-function mergeContent(mapped) {
+
+/** Ensure nested objects exist so the UI never crashes; values come only from ACF. */
+function finalizeContent(mapped) {
   return {
-    ...DEFAULT_CONTENT,
-    ...mapped,
-    hero: { ...DEFAULT_CONTENT.hero, ...mapped.hero },
-    sampleResult: { ...DEFAULT_CONTENT.sampleResult, ...mapped.sampleResult },
-    section: { ...DEFAULT_CONTENT.section, ...mapped.section },
-    calculator: { ...DEFAULT_CONTENT.calculator, ...mapped.calculator },
-    rules: { ...DEFAULT_CONTENT.rules, ...mapped.rules },
-    result: { ...DEFAULT_CONTENT.result, ...mapped.result },
-    howItWorksSection: {
-      ...DEFAULT_CONTENT.howItWorksSection,
-      ...mapped.howItWorksSection,
+    hero: mapped.hero ?? {
+      badge1: "",
+      badge2: "",
+      titleLine1: "",
+      titleHighlight: "",
+      titleSuffix: "",
+      description: "",
+      ctaLabel: "",
+      ctaLink: "",
+      secondaryCtaLabel: "",
+      secondaryCtaLink: "",
     },
-    policyAnalyserCta: {
-      ...DEFAULT_CONTENT.policyAnalyserCta,
-      ...mapped.policyAnalyserCta,
+    stats: mapped.stats ?? [],
+    sampleResult: mapped.sampleResult ?? {
+      title: "",
+      coveredLabel: "",
+      amount: 0,
+      periodLabel: "",
+      currentWeek: 0,
+      weekZeroLabel: "",
+      weekProgressLabel: "",
+      year1BoxLabel: "",
+      year2BoxLabel: "",
+      perMonthSuffix: "",
     },
-    stats: mapped.stats ?? DEFAULT_CONTENT.stats,
-    industries: mapped.industries ?? DEFAULT_CONTENT.industries,
-    howItWorks: mapped.howItWorks ?? DEFAULT_CONTENT.howItWorks,
+    industries: mapped.industries ?? [],
+    section: mapped.section ?? { kicker: "", title: "", description: "" },
+    calculator: mapped.calculator ?? {
+      nameLabel: "",
+      namePlaceholder: "",
+      companyLabel: "",
+      companyPlaceholder: "",
+      companyHint: "",
+      industryLabel: "",
+      industryPlaceholder: "",
+      industryHint: "",
+      statusLabel: "",
+      statusOptions: [],
+      statusDefault: "",
+      salaryLabel: "",
+      salaryPlaceholder: "",
+      salaryDefault: "",
+      salaryMin: 0,
+      salaryMax: 0,
+      salaryStep: 0,
+      hoursLabel: "",
+      hoursPlaceholder: "",
+      hoursDefault: "",
+      hoursMin: 0,
+      hoursMax: 0,
+      hoursStep: 0,
+      firstDayLabel: "",
+      firstDayHint: "",
+      lastDayLabel: "",
+      linkedLabel: "",
+      linkedDescription: "",
+      linkedFirstDayLabel: "",
+      linkedLastDayLabel: "",
+      linkedFlagMessage: "",
+      submitLabel: "",
+      submitLink: "",
+    },
+    rules: mapped.rules ?? {
+      year1Percent: 0,
+      year2Percent: 0,
+      maxWeeks: 0,
+      waitingDays: 0,
+      minWageMonthly: 0,
+      linkedAbsenceWindowDays: 0,
+      fullTimeHours: 0,
+    },
+    result: mapped.result ?? {
+      kicker: "",
+      emptyAmount: "",
+      perMonthSuffix: "",
+      year1Title: "",
+      year2Title: "",
+      year2PayLabel: "",
+      totalLabel: "",
+      monthlyLabel: "",
+      maxWeeksLabel: "",
+      waitingDaysLabel: "",
+      waitingDaysValue: "",
+      linkedAbsenceLabel: "",
+      hoursAdjustedLabel: "",
+      footnote: "",
+    },
+    howItWorksSection: mapped.howItWorksSection ?? { kicker: "", title: "" },
+    howItWorks: mapped.howItWorks ?? [],
+    policyAnalyserCta: mapped.policyAnalyserCta ?? {
+      title: "",
+      description: "",
+      link: "",
+    },
+    disclaimer: mapped.disclaimer ?? "",
   };
 }
 
 export function useCalculatorContent() {
-  const [content, setContent] = useState(DEFAULT_CONTENT);
+  const [content, setContent] = useState(null);
   const [isLoading, setIsLoading] = useState(Boolean(ACF_ENDPOINT));
-  const [isFallback, setIsFallback] = useState(!ACF_ENDPOINT);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(
+    ACF_ENDPOINT ? null : "Missing VITE_WP_API_URL / VITE_WP_CALCULATE_PAGE_ID",
+  );
 
   useEffect(() => {
-    // No env → no network request. Fix: create sweet-user-spark-main/.env
-    // with VITE_WP_API_URL + VITE_WP_CALCULATE_PAGE_ID, then restart Vite.
     if (!ACF_ENDPOINT) {
+      setIsLoading(false);
       console.warn(
-        "[Calculate] WP fetch skipped — VITE_WP_API_URL is missing.\n" +
-          "Create sweet-user-spark-main/.env then restart npm run dev.\n" +
-          "Expected:\n" +
-          "  VITE_WP_API_URL=https://devwp1.websiteserverhost.biz/ssp-calculator\n" +
-          "  VITE_WP_CALCULATE_PAGE_ID=130",
+        "[Calculate] WP fetch skipped — set VITE_WP_API_URL and VITE_WP_CALCULATE_PAGE_ID, then restart Vite.",
       );
       return;
     }
@@ -625,16 +691,14 @@ export function useCalculatorContent() {
 
         if (!acf || (typeof acf === "object" && Object.keys(acf).length === 0)) {
           if (!cancelled) {
-            setIsFallback(true);
+            setContent(null);
             setError("Calculate page ACF fields are empty");
-            console.warn("[Calculate] Page loaded but acf is empty — using DEFAULT_CONTENT");
           }
           return;
         }
 
         if (!cancelled) {
-          setContent(mergeContent(mapAcfResponseToContent(acf)));
-          setIsFallback(false);
+          setContent(finalizeContent(mapAcfResponseToContent(acf)));
           setError(null);
           console.info("[Calculate] ACF loaded OK", {
             pageId: page?.id,
@@ -645,9 +709,9 @@ export function useCalculatorContent() {
       } catch (err) {
         if (!cancelled) {
           const message = err instanceof Error ? err.message : "Failed to load WP content";
-          setIsFallback(true);
+          setContent(null);
           setError(message);
-          console.error("[Calculate] ACF fetch failed — using DEFAULT_CONTENT:", message);
+          console.error("[Calculate] ACF fetch failed:", message);
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -660,7 +724,7 @@ export function useCalculatorContent() {
     };
   }, []);
 
-  return { content, isLoading, isFallback, error, endpoint: ACF_ENDPOINT };
+  return { content, isLoading, error, endpoint: ACF_ENDPOINT };
 }
 
 export default useCalculatorContent;

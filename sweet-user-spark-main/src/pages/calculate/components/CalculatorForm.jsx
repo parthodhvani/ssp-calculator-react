@@ -181,7 +181,7 @@ export function CalculatorForm({ content, form }) {
           {linked && (
             <div className="mt-4 grid gap-5 sm:grid-cols-2">
               <FormField
-                label={calc.linkedFirstDayLabel || "First day of that earlier sick leave"}
+                label={calc.linkedFirstDayLabel}
               >
                 <div className="relative">
                   <Input

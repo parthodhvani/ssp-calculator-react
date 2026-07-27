@@ -1,38 +1,40 @@
 /**
- * ContactPage.jsx
- * ---------------------------------------------------------------------------
- * The "/contact" route. Copy from ACF; form posts to Contact Form 7 REST.
- * ---------------------------------------------------------------------------
+ * ContactPage.jsx — all copy from ACF; form posts to WP REST.
  */
 import { useContactContent } from "./useContactContent";
+import { AcfPageGate } from "../shared/AcfPageGate";
 import { ContactInfoList } from "./components/ContactInfoList";
 import { ContactForm } from "./components/ContactForm";
 
 export function ContactPage() {
-  const { content } = useContactContent();
+  const { content, isLoading, error } = useContactContent();
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-6 py-16 sm:py-20">
-      <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
-        {content.kicker}
-      </p>
-      <h1 className="mt-3 font-serif text-4xl tracking-tight text-foreground sm:text-5xl">
-        {content.title}
-      </h1>
-      <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
-        {content.description}
-      </p>
+    <AcfPageGate isLoading={isLoading} error={error} label="contact">
+      {content ? (
+        <main className="mx-auto w-full max-w-5xl px-6 py-16 sm:py-20">
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
+            {content.kicker}
+          </p>
+          <h1 className="mt-3 font-serif text-4xl tracking-tight text-foreground sm:text-5xl">
+            {content.title}
+          </h1>
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
+            {content.description}
+          </p>
 
-      <div className="mt-12 grid gap-8 lg:grid-cols-[1fr_1.4fr]">
-        <ContactInfoList items={content.infoItems} legalNote={content.legalNote} />
-        <ContactForm
-          topics={content.topics}
-          successTitle={content.successTitle}
-          successBody={content.successBody}
-          submitLabel={content.submitLabel}
-        />
-      </div>
-    </main>
+          <div className="mt-12 grid gap-8 lg:grid-cols-[1fr_1.4fr]">
+            <ContactInfoList items={content.infoItems} legalNote={content.legalNote} />
+            <ContactForm
+              topics={content.topics}
+              successTitle={content.successTitle}
+              successBody={content.successBody}
+              submitLabel={content.submitLabel}
+            />
+          </div>
+        </main>
+      ) : null}
+    </AcfPageGate>
   );
 }
 

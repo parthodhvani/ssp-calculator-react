@@ -11,7 +11,7 @@ export function ContactForm({
   topics,
   successTitle,
   successBody,
-  submitLabel = "Send message",
+  submitLabel = "",
 }) {
   const [sent, setSent] = useState(false);
   const [topic, setTopic] = useState(topics?.[0] || "");

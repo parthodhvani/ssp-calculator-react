@@ -1,25 +1,8 @@
 /**
- * useBlogContent.js
- * ---------------------------------------------------------------------------
- * Fetches ACF from the WordPress Blog page (header + featured quote +
- * relationship field `posts`) and merges onto DEFAULT_CONTENT.
- *
- * Configure in `.env`:
- *   VITE_WP_API_URL=https://devwp1.websiteserverhost.biz/ssp-calculator
- *   VITE_WP_BLOG_PAGE_ID=<id>
- *
- * Endpoint:
- *   {VITE_WP_API_URL}/wp-json/wp/v2/pages/{ID}
- *
- * Relationship may return post objects or IDs. If IDs only, a follow-up
- * request loads /wp-json/wp/v2/posts?include=…&_embed.
- *
- * Returns: { content, isLoading, isFallback, error, endpoint }
- * ---------------------------------------------------------------------------
+ * useBlogContent.js — ACF only (no local default copy).
+ * Relationship field `posts` on the Blog page.
  */
-
 import { useEffect, useState } from "react";
-import { DEFAULT_CONTENT } from "./content";
 
 const WP_API_URL = import.meta.env.VITE_WP_API_URL;
 const PAGE_ID = import.meta.env.VITE_WP_BLOG_PAGE_ID;
@@ -125,107 +108,69 @@ function mapPostObject(raw) {
     id: postId(raw),
     slug: str(raw.slug || raw.post_name, ""),
     date: formatDate(dateRaw) || str(dateRaw),
-    read: str(first(acf.read_time, acf.read, raw.read_time), "5 min"),
-    tag: str(first(acf.tag, categoryName), "Article"),
+    read: str(first(acf.read_time, acf.read, raw.read_time), ""),
+    tag: str(first(acf.tag, categoryName), ""),
     title,
     excerpt: stripHtml(excerptRaw),
   };
 }
 
 async function resolvePosts(rawPosts) {
-  if (!Array.isArray(rawPosts) || rawPosts.length === 0) return null;
+  if (!Array.isArray(rawPosts) || rawPosts.length === 0) return [];
 
   const objects = rawPosts.filter(isPostObject).map(mapPostObject).filter(Boolean);
   if (objects.length === rawPosts.length) return objects;
 
   const ids = rawPosts.map(postId).filter((id) => id != null && !Number.isNaN(id));
-  if (ids.length === 0) return objects.length > 0 ? objects : null;
+  if (ids.length === 0) return objects;
 
   const base = wpBase();
-  if (!base) return objects.length > 0 ? objects : null;
+  if (!base) return objects;
 
   const url = `${base}/wp-json/wp/v2/posts?include=${ids.join(",")}&per_page=${ids.length}&_embed=1`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`WP posts API responded ${res.status}`);
   const json = await res.json();
-  if (!Array.isArray(json)) return objects.length > 0 ? objects : null;
+  if (!Array.isArray(json)) return objects;
 
   const byId = new Map(json.map((p) => [Number(p.id), mapPostObject(p)]));
-  const ordered = ids.map((id) => byId.get(Number(id))).filter(Boolean);
-  return ordered.length > 0 ? ordered : objects.length > 0 ? objects : null;
+  return ids.map((id) => byId.get(Number(id))).filter(Boolean);
 }
 
 export async function mapAcfResponseToContent(acf) {
-  if (!acf || typeof acf !== "object") return {};
+  if (!acf || typeof acf !== "object") return null;
 
-  const content = {};
   const headerG = group(acf, "header");
-
-  if (
-    headerG ||
-    acf.kicker ||
-    acf.title ||
-    acf.description ||
-    acf.blog_kicker ||
-    acf.blog_title
-  ) {
-    content.kicker = str(
-      first(headerG?.kicker, acf.kicker, acf.blog_kicker),
-      DEFAULT_CONTENT.kicker,
-    );
-    content.title = str(
-      first(headerG?.title, acf.title, acf.blog_title),
-      DEFAULT_CONTENT.title,
-    );
-    content.description = str(
-      first(headerG?.description, acf.description, acf.blog_description),
-      DEFAULT_CONTENT.description,
-    );
-  }
-
-  if (acf.featured_quote != null || acf.featuredQuote != null) {
-    content.featuredQuote = str(
-      first(acf.featured_quote, acf.featuredQuote),
-      DEFAULT_CONTENT.featuredQuote,
-    );
-  }
-
   const rawPosts = acf.posts || acf.related_posts || acf.blog_posts;
   const posts = await resolvePosts(rawPosts);
-  if (posts && posts.length > 0) {
-    content.posts = posts;
-  }
 
-  return content;
-}
-
-function mergeContent(mapped) {
   return {
-    ...DEFAULT_CONTENT,
-    ...mapped,
-    posts: mapped.posts ?? DEFAULT_CONTENT.posts,
+    kicker: str(first(headerG?.kicker, acf.kicker, acf.blog_kicker)),
+    title: str(first(headerG?.title, acf.title, acf.blog_title)),
+    description: str(
+      first(headerG?.description, acf.description, acf.blog_description),
+    ),
+    featuredQuote: str(first(acf.featured_quote, acf.featuredQuote)),
+    posts,
   };
 }
 
 export function useBlogContent() {
-  const [content, setContent] = useState(DEFAULT_CONTENT);
+  const [content, setContent] = useState(null);
   const [isLoading, setIsLoading] = useState(Boolean(ACF_ENDPOINT));
-  const [isFallback, setIsFallback] = useState(!ACF_ENDPOINT);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(
+    ACF_ENDPOINT ? null : "Missing VITE_WP_API_URL / VITE_WP_BLOG_PAGE_ID",
+  );
 
   useEffect(() => {
     if (!ACF_ENDPOINT) {
-      console.warn(
-        "[Blog] WP fetch skipped — VITE_WP_API_URL or page ID/slug missing.\n" +
-          "Set VITE_WP_API_URL and VITE_WP_BLOG_PAGE_ID then restart Vite.",
-      );
+      setIsLoading(false);
       return;
     }
 
     let cancelled = false;
 
     async function load() {
-      console.info("[Blog] Fetching ACF from", ACF_ENDPOINT);
       try {
         const res = await fetch(ACF_ENDPOINT);
         if (!res.ok) throw new Error(`WP REST API responded ${res.status}`);
@@ -233,33 +178,23 @@ export function useBlogContent() {
         const page = Array.isArray(json) ? json[0] : json;
         const acf = page?.acf;
 
-        if (!acf || (typeof acf === "object" && Object.keys(acf).length === 0)) {
+        if (!acf || Object.keys(acf).length === 0) {
           if (!cancelled) {
-            setIsFallback(true);
+            setContent(null);
             setError("Blog page ACF fields are empty");
-            console.warn("[Blog] Page loaded but acf is empty — using DEFAULT_CONTENT");
           }
           return;
         }
 
         const mapped = await mapAcfResponseToContent(acf);
         if (!cancelled) {
-          setContent(mergeContent(mapped));
-          setIsFallback(false);
+          setContent(mapped);
           setError(null);
-          console.info("[Blog] ACF loaded OK", {
-            pageId: page?.id,
-            slug: page?.slug,
-            acfKeys: Object.keys(acf),
-            postCount: mapped.posts?.length,
-          });
         }
       } catch (err) {
         if (!cancelled) {
-          const message = err instanceof Error ? err.message : "Failed to load WP content";
-          setIsFallback(true);
-          setError(message);
-          console.error("[Blog] ACF fetch failed — using DEFAULT_CONTENT:", message);
+          setContent(null);
+          setError(err instanceof Error ? err.message : "Failed to load WP content");
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -272,7 +207,7 @@ export function useBlogContent() {
     };
   }, []);
 
-  return { content, isLoading, isFallback, error, endpoint: ACF_ENDPOINT };
+  return { content, isLoading, error, endpoint: ACF_ENDPOINT };
 }
 
 export default useBlogContent;
