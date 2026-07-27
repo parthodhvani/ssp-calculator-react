@@ -1,7 +1,7 @@
 /**
  * ContactForm.jsx — Contact page
- * Submits to Contact Form 7 REST:
- *   POST …/wp-json/contact-form-7/v1/contact-forms/{id}/feedback
+ * Submits to WordPress:
+ *   POST …/wp-json/recura/v1/contact
  */
 import { useEffect, useState } from "react";
 import { CheckCircle2, Send, Loader2 } from "lucide-react";
@@ -46,13 +46,13 @@ export function ContactForm({
         form.reset();
       } else {
         setError(result.message || "Could not send your message. Please try again.");
-        console.error("[Contact] CF7 submit failed", result);
+        console.error("[Contact] submit failed", result);
       }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Network error — could not reach WordPress.";
       setError(message);
-      console.error("[Contact] CF7 submit error", err);
+      console.error("[Contact] submit error", err);
     } finally {
       setSubmitting(false);
     }
