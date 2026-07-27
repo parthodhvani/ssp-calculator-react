@@ -1,23 +1,61 @@
 /**
  * ContactForm.jsx — Contact page
- * Right column: the actual form + its "message sent" success state.
- *
- * NOTE for WP dev: `onSubmit` currently just flips local `sent` state to
- * true (demo only). Wire it up to your real submission endpoint (e.g. a WP
- * REST route, Formspree, or wp_mail via a custom endpoint) inside
- * `handleSubmit` below.
+ * Submits to Contact Form 7 REST:
+ *   POST …/wp-json/contact-form-7/v1/contact-forms/{id}/feedback
  */
-import { useState } from "react";
-import { CheckCircle2, Send } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CheckCircle2, Send, Loader2 } from "lucide-react";
+import { submitContactForm } from "../submitContactForm";
 
-export function ContactForm({ topics, successTitle, successBody }) {
+export function ContactForm({
+  topics,
+  successTitle,
+  successBody,
+  submitLabel = "Send message",
+}) {
   const [sent, setSent] = useState(false);
-  const [topic, setTopic] = useState(topics[0]);
+  const [topic, setTopic] = useState(topics?.[0] || "");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
-  function handleSubmit(e) {
+  useEffect(() => {
+    if (!topics?.length) return;
+    if (!topics.includes(topic)) {
+      setTopic(topics[0]);
+    }
+  }, [topics, topic]);
+
+  async function handleSubmit(e) {
     e.preventDefault();
-    // TODO (WP dev): send `topic` + form fields to your backend here.
-    setSent(true);
+    setError(null);
+
+    const form = e.currentTarget;
+    const data = new FormData(form);
+
+    setSubmitting(true);
+    try {
+      const result = await submitContactForm({
+        name: String(data.get("name") || ""),
+        email: String(data.get("email") || ""),
+        topic,
+        message: String(data.get("message") || ""),
+      });
+
+      if (result.ok) {
+        setSent(true);
+        form.reset();
+      } else {
+        setError(result.message || "Could not send your message. Please try again.");
+        console.error("[Contact] CF7 submit failed", result);
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Network error — could not reach WordPress.";
+      setError(message);
+      console.error("[Contact] CF7 submit error", err);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -28,7 +66,11 @@ export function ContactForm({ topics, successTitle, successBody }) {
           <h2 className="font-serif text-2xl text-foreground">{successTitle}</h2>
           <p className="max-w-md text-sm text-muted-foreground">{successBody}</p>
           <button
-            onClick={() => setSent(false)}
+            type="button"
+            onClick={() => {
+              setSent(false);
+              setError(null);
+            }}
             className="mt-2 inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary"
           >
             Send another message
@@ -45,7 +87,9 @@ export function ContactForm({ topics, successTitle, successBody }) {
                 required
                 type="text"
                 name="name"
-                className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
+                autoComplete="name"
+                disabled={submitting}
+                className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none disabled:opacity-60"
                 placeholder="Anna de Vries"
               />
             </div>
@@ -57,7 +101,9 @@ export function ContactForm({ topics, successTitle, successBody }) {
                 required
                 type="email"
                 name="email"
-                className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
+                autoComplete="email"
+                disabled={submitting}
+                className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none disabled:opacity-60"
                 placeholder="you@company.nl"
               />
             </div>
@@ -72,8 +118,9 @@ export function ContactForm({ topics, successTitle, successBody }) {
                 <button
                   type="button"
                   key={t}
+                  disabled={submitting}
                   onClick={() => setTopic(t)}
-                  className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-60 ${
                     topic === t
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-background text-foreground hover:bg-secondary"
@@ -93,16 +140,29 @@ export function ContactForm({ topics, successTitle, successBody }) {
               required
               rows={6}
               name="message"
-              className="mt-2 w-full resize-y rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-accent focus:outline-none"
+              disabled={submitting}
+              className="mt-2 w-full resize-y rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-accent focus:outline-none disabled:opacity-60"
               placeholder="Tell us what you're trying to figure out…"
             />
           </div>
 
+          {error ? (
+            <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
+          ) : null}
+
           <button
             type="submit"
-            className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            disabled={submitting}
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
           >
-            <Send className="h-4 w-4" /> Send message
+            {submitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+            {submitting ? "Sending…" : submitLabel}
           </button>
         </form>
       )}

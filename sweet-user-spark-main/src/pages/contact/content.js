@@ -1,20 +1,17 @@
 /**
  * content.js — Contact page
  * ---------------------------------------------------------------------------
- * All copy for the Contact page in one place. Follows the same pattern as
- * src/pages/calculate/content.js so a WP dev can wire this up to ACF later
- * (e.g. an Options Page "Contact Settings" with matching field names in the
- * suggested `acfField` comments below).
+ * Fallback when WordPress/ACF is unreachable. Live copy from Contact page ACF.
+ * Submissions go through Contact Form 7 (see submitContactForm.js).
  * ---------------------------------------------------------------------------
  */
 import { Mail, MessageSquare, MapPin } from "lucide-react";
 
 export const DEFAULT_CONTENT = {
-  kicker: "Reach us", // ACF field: contact_kicker
-  title: "Contact", // ACF field: contact_title
+  kicker: "Reach us",
+  title: "Contact",
   description:
-    "Questions, feedback or a tricky case? We read every message and usually respond within a working day.", // ACF field: contact_description
-  // ACF field: contact_info (repeater: icon [select] / label / value / href)
+    "Questions, feedback or a tricky case? We read every message and usually respond within a working day.",
   infoItems: [
     {
       icon: Mail,
@@ -35,10 +32,10 @@ export const DEFAULT_CONTENT = {
     },
   ],
   legalNote:
-    "Recura is an information tool, not a law firm. For binding advice on your own case, consult a Dutch employment lawyer or your works council.", // ACF field: contact_legal_note
-  // ACF field: contact_topics (repeater of single "topic_label" text rows)
+    "Recura is an information tool, not a law firm. For binding advice on your own case, consult a Dutch employment lawyer or your works council.",
   topics: ["General question", "My own case", "Policy audit", "Press"],
-  successTitle: "Message received", // ACF field: contact_success_title
+  successTitle: "Message received",
   successBody:
-    "Thanks — we'll reply to you within a working day. In the meantime, feel free to explore the calculator or the rules page.", // ACF field: contact_success_body
+    "Thanks — we'll reply to you within a working day. In the meantime, feel free to explore the calculator or the rules page.",
+  submitLabel: "Send message",
 };

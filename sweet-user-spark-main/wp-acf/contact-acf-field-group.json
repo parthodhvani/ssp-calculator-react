@@ -1,0 +1,200 @@
+[
+  {
+    "key": "group_contact_page",
+    "title": "Contact Page — Edit Content",
+    "fields": [
+      {
+        "key": "field_contact_msg_welcome",
+        "label": "How to use",
+        "name": "",
+        "type": "message",
+        "message": "<div style=\"padding:12px 16px;background:#f0f6ff;border-left:4px solid #1e3a5f;border-radius:6px\"><p style=\"margin:0 0 8px\"><strong>Edit the Contact page copy here.</strong></p><p style=\"margin:0;color:#444\">Form <em>submissions</em> are handled by <strong>Contact Form 7</strong> (see Flamingo for inbox). This field group only controls page text, info cards, topics, and success message. Create a WP page with slug <strong>contact</strong>, then set <code>VITE_WP_CONTACT_PAGE_ID</code> in React <code>.env</code>.</p></div>"
+      },
+
+      {
+        "key": "field_contact_tab_header",
+        "label": "① Page header",
+        "type": "tab",
+        "placement": "top"
+      },
+      {
+        "key": "field_contact_header",
+        "label": "Header",
+        "name": "header",
+        "type": "group",
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_contact_kicker",
+            "label": "Small kicker (above the title)",
+            "name": "kicker",
+            "type": "text",
+            "default_value": "Reach us"
+          },
+          {
+            "key": "field_contact_title",
+            "label": "Page title",
+            "name": "title",
+            "type": "text",
+            "default_value": "Contact"
+          },
+          {
+            "key": "field_contact_description",
+            "label": "Description under the title",
+            "name": "description",
+            "type": "textarea",
+            "rows": 3,
+            "default_value": "Questions, feedback or a tricky case? We read every message and usually respond within a working day."
+          }
+        ]
+      },
+
+      {
+        "key": "field_contact_tab_info",
+        "label": "② Contact info",
+        "type": "tab"
+      },
+      {
+        "key": "field_contact_info",
+        "label": "Info cards",
+        "name": "info_items",
+        "type": "repeater",
+        "layout": "block",
+        "min": 0,
+        "max": 8,
+        "button_label": "+ Add info card",
+        "sub_fields": [
+          {
+            "key": "field_contact_info_icon",
+            "label": "Icon",
+            "name": "icon",
+            "type": "select",
+            "choices": {
+              "mail": "Mail",
+              "message": "Message",
+              "map": "Map pin"
+            },
+            "default_value": "mail",
+            "return_format": "value",
+            "wrapper": { "width": "25" }
+          },
+          {
+            "key": "field_contact_info_label",
+            "label": "Label",
+            "name": "label",
+            "type": "text",
+            "wrapper": { "width": "25" }
+          },
+          {
+            "key": "field_contact_info_value",
+            "label": "Value (shown text)",
+            "name": "value",
+            "type": "text",
+            "wrapper": { "width": "25" }
+          },
+          {
+            "key": "field_contact_info_href",
+            "label": "Link (optional)",
+            "name": "href",
+            "type": "text",
+            "placeholder": "mailto:hello@recura.nl",
+            "wrapper": { "width": "25" }
+          }
+        ]
+      },
+      {
+        "key": "field_contact_legal_note",
+        "label": "Legal note under the info cards",
+        "name": "legal_note",
+        "type": "textarea",
+        "rows": 3,
+        "default_value": "Recura is an information tool, not a law firm. For binding advice on your own case, consult a Dutch employment lawyer or your works council."
+      },
+
+      {
+        "key": "field_contact_tab_form",
+        "label": "③ Form topics & success",
+        "type": "tab"
+      },
+      {
+        "key": "field_contact_msg_form",
+        "label": "",
+        "name": "",
+        "type": "message",
+        "message": "<p style=\"margin:0;padding:8px 12px;background:#f8fafc;border-radius:4px\">Topics appear as selectable chips on the React form. Actual delivery uses Contact Form 7 — field names must match: <code>your-name</code>, <code>your-email</code>, <code>your-topic</code>, <code>your-message</code>.</p>"
+      },
+      {
+        "key": "field_contact_topics",
+        "label": "Topic chips",
+        "name": "topics",
+        "type": "repeater",
+        "layout": "table",
+        "min": 1,
+        "max": 12,
+        "button_label": "+ Add topic",
+        "sub_fields": [
+          {
+            "key": "field_contact_topic_label",
+            "label": "Topic label",
+            "name": "label",
+            "type": "text",
+            "placeholder": "General question"
+          }
+        ]
+      },
+      {
+        "key": "field_contact_success_title",
+        "label": "Success title (after send)",
+        "name": "success_title",
+        "type": "text",
+        "default_value": "Message received"
+      },
+      {
+        "key": "field_contact_success_body",
+        "label": "Success body (after send)",
+        "name": "success_body",
+        "type": "textarea",
+        "rows": 3,
+        "default_value": "Thanks — we'll reply to you within a working day. In the meantime, feel free to explore the calculator or the rules page."
+      },
+      {
+        "key": "field_contact_submit_label",
+        "label": "Submit button text",
+        "name": "submit_label",
+        "type": "text",
+        "default_value": "Send message"
+      }
+    ],
+    "location": [
+      [
+        {
+          "param": "page",
+          "operator": "==",
+          "value": "contact"
+        }
+      ]
+    ],
+    "menu_order": 0,
+    "position": "acf_after_title",
+    "style": "seamless",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": [
+      "the_content",
+      "excerpt",
+      "discussion",
+      "comments",
+      "revisions",
+      "slug",
+      "author",
+      "format",
+      "featured_image",
+      "categories",
+      "tags",
+      "send-trackbacks"
+    ],
+    "active": true,
+    "show_in_rest": 1,
+    "description": "Contact page copy. Submissions go through Contact Form 7 REST. Set VITE_WP_CONTACT_PAGE_ID + VITE_WP_CF7_FORM_ID."
+  }
+]

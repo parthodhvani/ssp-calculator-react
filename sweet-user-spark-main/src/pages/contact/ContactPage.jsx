@@ -1,15 +1,15 @@
 /**
  * ContactPage.jsx
  * ---------------------------------------------------------------------------
- * The "/contact" route. Import and render this from src/routes/contact.tsx.
+ * The "/contact" route. Copy from ACF; form posts to Contact Form 7 REST.
  * ---------------------------------------------------------------------------
  */
-import { DEFAULT_CONTENT } from "./content";
+import { useContactContent } from "./useContactContent";
 import { ContactInfoList } from "./components/ContactInfoList";
 import { ContactForm } from "./components/ContactForm";
 
 export function ContactPage() {
-  const content = DEFAULT_CONTENT;
+  const { content } = useContactContent();
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-16 sm:py-20">
@@ -29,6 +29,7 @@ export function ContactPage() {
           topics={content.topics}
           successTitle={content.successTitle}
           successBody={content.successBody}
+          submitLabel={content.submitLabel}
         />
       </div>
     </main>
