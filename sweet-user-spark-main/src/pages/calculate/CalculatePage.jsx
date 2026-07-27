@@ -16,7 +16,20 @@ import { ResultSummary } from "./components/ResultSummary";
 import { HowItWorks } from "./components/HowItWorks";
 
 export function CalculatePage() {
-  const { content } = useCalculatorContent();
+  const { content, isFallback, error, endpoint } = useCalculatorContent();
+
+  // Dev aid: confirms whether WP ACF is actually driving the page
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.info("[CalculatePage] content source:", {
+        endpoint,
+        isFallback,
+        error,
+        heroBadge1: content.hero?.badge1,
+        year1Percent: content.rules?.year1Percent,
+      });
+    }
+  }, [endpoint, isFallback, error, content.hero?.badge1, content.rules?.year1Percent]);
 
   const [status, setStatus] = useState(content.calculator.statusDefault);
   const [linked, setLinked] = useState(false);

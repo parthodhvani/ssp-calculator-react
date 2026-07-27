@@ -1,7 +1,13 @@
 /**
  * CalculatorForm.jsx — Calculate page
- * Line-by-line fields (one per row). Every label / placeholder / constraint
- * and the submit button (+ optional link) come from ACF `content`.
+ * Two-column card layout matching the design:
+ *   Name | Company
+ *   Industry (full)
+ *   Status (full)
+ *   Salary | Hours
+ *   First day | Last day
+ *   Linked absence (full)
+ * All copy / constraints from ACF `content`.
  */
 import { CalendarDays, Info, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -69,17 +75,21 @@ export function CalculatorForm({ content, form }) {
       className="rounded-2xl border border-border bg-card p-6 sm:p-8"
       style={{ boxShadow: "var(--shadow-card)" }}
     >
-      {/* One field per row — line by line */}
-      <div className="flex flex-col gap-5">
+      <div className="grid gap-5 sm:grid-cols-2">
+        {/* Row 1 — Name | Company */}
         <FormField label={calc.nameLabel}>
           <Input placeholder={calc.namePlaceholder} />
         </FormField>
-
         <FormField label={calc.companyLabel} hint={calc.companyHint}>
           <Input placeholder={calc.companyPlaceholder} />
         </FormField>
 
-        <FormField label={calc.industryLabel} hint={calc.industryHint}>
+        {/* Row 2 — Industry (full width) */}
+        <FormField
+          label={calc.industryLabel}
+          hint={calc.industryHint}
+          className="sm:col-span-2"
+        >
           <Select>
             <SelectTrigger>
               <SelectValue placeholder={calc.industryPlaceholder} />
@@ -94,7 +104,8 @@ export function CalculatorForm({ content, form }) {
           </Select>
         </FormField>
 
-        <FormField label={calc.statusLabel}>
+        {/* Row 3 — Employment status (full width) */}
+        <FormField label={calc.statusLabel} className="sm:col-span-2">
           <RadioGroup
             value={status}
             onValueChange={(v) => setStatus(v)}
@@ -116,6 +127,7 @@ export function CalculatorForm({ content, form }) {
           </RadioGroup>
         </FormField>
 
+        {/* Row 4 — Salary | Hours */}
         <FormField label={calc.salaryLabel}>
           <Input
             type="number"
@@ -128,7 +140,6 @@ export function CalculatorForm({ content, form }) {
             onChange={(e) => setSalary(e.target.value.replace(/[^\d.]/g, ""))}
           />
         </FormField>
-
         <FormField label={calc.hoursLabel}>
           <Input
             type="number"
@@ -142,6 +153,7 @@ export function CalculatorForm({ content, form }) {
           />
         </FormField>
 
+        {/* Row 5 — First day | Last day */}
         <FormField label={calc.firstDayLabel} hint={calc.firstDayHint}>
           <div className="relative">
             <Input
@@ -152,16 +164,19 @@ export function CalculatorForm({ content, form }) {
             <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           </div>
         </FormField>
-
         <FormField label={calc.lastDayLabel}>
-          <Input
-            type="date"
-            value={lastDay}
-            onChange={(e) => setLastDay(e.target.value)}
-          />
+          <div className="relative">
+            <Input
+              type="date"
+              value={lastDay}
+              onChange={(e) => setLastDay(e.target.value)}
+            />
+            <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          </div>
         </FormField>
 
-        <div>
+        {/* Row 6 — Linked absence (full width) */}
+        <div className="sm:col-span-2">
           <div className="flex items-start justify-between gap-4 rounded-lg border border-border bg-secondary/40 p-4">
             <div>
               <p className="text-sm font-medium text-foreground">{calc.linkedLabel}</p>
@@ -172,11 +187,14 @@ export function CalculatorForm({ content, form }) {
           {linked && (
             <div className="mt-4">
               <FormField label={calc.linkedLastDayLabel}>
-                <Input
-                  type="date"
-                  value={linkedLastDay}
-                  onChange={(e) => setLinkedLastDay(e.target.value)}
-                />
+                <div className="relative">
+                  <Input
+                    type="date"
+                    value={linkedLastDay}
+                    onChange={(e) => setLinkedLastDay(e.target.value)}
+                  />
+                  <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                </div>
               </FormField>
               {linkedAbsenceFlag && (
                 <p className="mt-2 text-xs font-medium text-accent">{linkedFlagMessage}</p>
