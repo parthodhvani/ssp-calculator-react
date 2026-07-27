@@ -1,0 +1,244 @@
+[
+  {
+    "key": "group_sick_leave_calculator",
+    "title": "Sick Leave Calculator",
+    "fields": [
+      {
+        "key": "field_hero_badge",
+        "name": "hero_badge",
+        "label": "Hero badge text",
+        "type": "text",
+        "default_value": "Art. 7:629 \u00b7 minimum wage July 2026"
+      },
+      {
+        "key": "field_hero_title_line1",
+        "name": "hero_title_line1",
+        "label": "Hero title (line 1)",
+        "type": "text",
+        "default_value": "Netherlands sick leave,"
+      },
+      {
+        "key": "field_hero_title_highlight",
+        "name": "hero_title_highlight",
+        "label": "Hero title (highlighted phrase)",
+        "type": "text",
+        "default_value": "calculated properly"
+      },
+      {
+        "key": "field_hero_title_suffix",
+        "name": "hero_title_suffix",
+        "label": "Hero title (suffix)",
+        "type": "text",
+        "default_value": "\u2014 and explained."
+      },
+      {
+        "key": "field_hero_description",
+        "name": "hero_description",
+        "label": "Hero description",
+        "type": "textarea",
+        "rows": 3
+      },
+      {
+        "key": "field_hero_cta_label",
+        "name": "hero_cta_label",
+        "label": "Hero CTA button text",
+        "type": "text",
+        "default_value": "Start calculating"
+      },
+      {
+        "key": "field_stats",
+        "name": "stats",
+        "label": "Stat strip (3 items)",
+        "type": "repeater",
+        "layout": "table",
+        "min": 3,
+        "max": 3,
+        "button_label": "Add stat",
+        "sub_fields": [
+          {
+            "key": "field_stat_value",
+            "name": "stat_value",
+            "label": "Value",
+            "type": "text",
+            "placeholder": "e.g. 104"
+          },
+          {
+            "key": "field_stat_label",
+            "name": "stat_label",
+            "label": "Label",
+            "type": "text",
+            "placeholder": "e.g. weeks max entitlement"
+          }
+        ]
+      },
+      {
+        "key": "field_sample_amount",
+        "name": "sample_amount",
+        "label": "Sample result: monthly amount (EUR)",
+        "type": "number",
+        "default_value": 3200
+      },
+      {
+        "key": "field_sample_period_label",
+        "name": "sample_period_label",
+        "label": "Sample result: period label",
+        "type": "text",
+        "default_value": "Year 1 \u00b7 Weeks 1\u201352"
+      },
+      {
+        "key": "field_sample_current_week",
+        "name": "sample_current_week",
+        "label": "Sample result: current week",
+        "type": "number",
+        "default_value": 40
+      },
+      {
+        "key": "field_industries",
+        "name": "industries",
+        "label": "Industry dropdown options",
+        "type": "repeater",
+        "layout": "table",
+        "button_label": "Add industry",
+        "sub_fields": [
+          {
+            "key": "field_industry_name",
+            "name": "industry_name",
+            "label": "Industry name",
+            "type": "text"
+          }
+        ]
+      },
+      {
+        "key": "field_rules_tab",
+        "label": "Calculation rules",
+        "type": "tab"
+      },
+      {
+        "key": "field_rules_year1_percent",
+        "name": "rules_year1_percent",
+        "label": "Year 1 pay (% of gross)",
+        "type": "number",
+        "default_value": 100,
+        "min": 0,
+        "max": 100,
+        "instructions": "Statutory minimum is 70%; most contracts top this up to 100% in year 1."
+      },
+      {
+        "key": "field_rules_year2_percent",
+        "name": "rules_year2_percent",
+        "label": "Year 2 pay (% of gross)",
+        "type": "number",
+        "default_value": 70,
+        "min": 0,
+        "max": 100
+      },
+      {
+        "key": "field_rules_max_weeks",
+        "name": "rules_max_weeks",
+        "label": "Max entitlement (weeks)",
+        "type": "number",
+        "default_value": 104
+      },
+      {
+        "key": "field_rules_waiting_days",
+        "name": "rules_waiting_days",
+        "label": "Waiting day(s) (wachtdag)",
+        "type": "number",
+        "default_value": 1
+      },
+      {
+        "key": "field_rules_min_wage_monthly",
+        "name": "rules_min_wage_monthly",
+        "label": "Statutory minimum wage / month (EUR)",
+        "type": "number",
+        "default_value": 2437,
+        "instructions": "Update twice a year (Jan/Jul) when the Dutch government revises minimum wage."
+      },
+      {
+        "key": "field_rules_linked_absence_days",
+        "name": "rules_linked_absence_days",
+        "label": "Linked-absence window (days)",
+        "type": "number",
+        "default_value": 28,
+        "instructions": "Statutory: 28 days (4 weeks). Two absences closer together than this share one entitlement."
+      },
+      {
+        "key": "field_how_it_works_tab",
+        "label": "How it works",
+        "type": "tab"
+      },
+      {
+        "key": "field_how_it_works",
+        "name": "how_it_works",
+        "label": "How it works (3 steps)",
+        "type": "repeater",
+        "layout": "block",
+        "min": 3,
+        "max": 3,
+        "button_label": "Add step",
+        "sub_fields": [
+          {
+            "key": "field_step_number",
+            "name": "step_number",
+            "label": "Number",
+            "type": "text",
+            "placeholder": "01"
+          },
+          {
+            "key": "field_step_title",
+            "name": "step_title",
+            "label": "Title",
+            "type": "text"
+          },
+          {
+            "key": "field_step_description",
+            "name": "step_description",
+            "label": "Description",
+            "type": "textarea",
+            "rows": 2
+          }
+        ]
+      },
+      {
+        "key": "field_misc_tab",
+        "label": "Misc",
+        "type": "tab"
+      },
+      {
+        "key": "field_policy_cta_title",
+        "name": "policy_cta_title",
+        "label": "Policy-analyser CTA title",
+        "type": "text",
+        "default_value": "Check your own policy"
+      },
+      {
+        "key": "field_policy_cta_description",
+        "name": "policy_cta_description",
+        "label": "Policy-analyser CTA description",
+        "type": "text",
+        "default_value": "Upload contract / CAO \u2014 AI checks it against Dutch rules."
+      },
+      {
+        "key": "field_disclaimer_text",
+        "name": "disclaimer_text",
+        "label": "Disclaimer text",
+        "type": "text",
+        "default_value": "Illustrative estimate \u2014 not legal advice."
+      }
+    ],
+    "location": [
+      [
+        {
+          "param": "options_page",
+          "operator": "==",
+          "value": "acf-options-calculator-settings"
+        }
+      ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "active": true,
+    "description": "Content and legal-rule numbers for the sick leave calculator homepage. See ACF-INTEGRATION.md in the same folder for setup steps."
+  }
+]
