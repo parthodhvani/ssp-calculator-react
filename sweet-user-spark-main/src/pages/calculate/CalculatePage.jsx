@@ -1,9 +1,8 @@
 /**
  * CalculatePage.jsx
  * ---------------------------------------------------------------------------
- * The "/" route. Wires state + sections together — markup lives in
- * ./components/*. All copy, defaults, and calculation rules come from
- * `content` (ACF via useCalculatorContent / DEFAULT_CONTENT fallback).
+ * Wires form state → entitlement maths → live result card.
+ * Salary, hours, and sick-leave dates all drive the estimate.
  * ---------------------------------------------------------------------------
  */
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -18,7 +17,6 @@ import { HowItWorks } from "./components/HowItWorks";
 export function CalculatePage() {
   const { content, isFallback, error, endpoint } = useCalculatorContent();
 
-  // Dev aid: confirms whether WP ACF is actually driving the page
   useEffect(() => {
     if (import.meta.env.DEV) {
       console.info("[CalculatePage] content source:", {
@@ -33,14 +31,13 @@ export function CalculatePage() {
 
   const [status, setStatus] = useState(content.calculator.statusDefault);
   const [linked, setLinked] = useState(false);
+  const [linkedFirstDay, setLinkedFirstDay] = useState("");
   const [linkedLastDay, setLinkedLastDay] = useState("");
   const [salary, setSalary] = useState(String(content.calculator.salaryDefault ?? ""));
   const [hours, setHours] = useState(String(content.calculator.hoursDefault ?? ""));
   const [firstDay, setFirstDay] = useState("");
   const [lastDay, setLastDay] = useState("");
 
-  // When WP defaults arrive (or change), apply them only if the field still
-  // holds the previous default — never clobber something the user typed.
   const prevDefaults = useRef({
     salary: String(content.calculator.salaryDefault ?? ""),
     hours: String(content.calculator.hoursDefault ?? ""),
@@ -73,22 +70,46 @@ export function CalculatePage() {
     content.calculator.statusDefault,
   ]);
 
-  // Maths always reads percentages / limits from content.rules (ACF-driven).
-  const estimate = useMemo(
-    () => calculateEntitlement(Number(salary) || 0, content.rules),
-    [salary, content.rules],
-  );
-
   const linkedAbsenceFlag = useMemo(() => {
     if (!linked || !linkedLastDay || !firstDay) return false;
     return isLinkedAbsence(linkedLastDay, firstDay, content.rules);
   }, [linked, linkedLastDay, firstDay, content.rules]);
+
+  // Live estimate — salary, hours, and dates all count
+  const estimate = useMemo(
+    () =>
+      calculateEntitlement(
+        {
+          grossMonthlySalary: Number(salary) || 0,
+          contractedHours: Number(hours) || 0,
+          firstDay,
+          lastDay,
+          linked: linked && linkedAbsenceFlag,
+          linkedFirstDay: linked ? linkedFirstDay : "",
+          linkedLastDay: linked ? linkedLastDay : "",
+        },
+        content.rules,
+      ),
+    [
+      salary,
+      hours,
+      firstDay,
+      lastDay,
+      linked,
+      linkedFirstDay,
+      linkedLastDay,
+      linkedAbsenceFlag,
+      content.rules,
+    ],
+  );
 
   const form = {
     status,
     setStatus,
     linked,
     setLinked,
+    linkedFirstDay,
+    setLinkedFirstDay,
     linkedLastDay,
     setLinkedLastDay,
     salary,
@@ -107,21 +128,23 @@ export function CalculatePage() {
       <HeroSection content={content} />
 
       <section id="calculator" className="mx-auto max-w-6xl px-6 py-16">
-        <div className="mb-10 flex items-end justify-between gap-6">
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
-              {content.section.kicker}
-            </p>
-            <h2 className="mt-2 font-serif text-3xl tracking-tight text-foreground sm:text-4xl">
-              {content.section.title}
-            </h2>
-            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-              {content.section.description}
-            </p>
-          </div>
+        <div className="mb-10">
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
+            {content.section.kicker}
+          </p>
+          <h2 className="mt-2 font-serif text-3xl tracking-tight text-foreground sm:text-4xl">
+            {content.section.title}
+          </h2>
+          <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+            {content.section.description}
+          </p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[1.35fr_1fr]">
+        {/* Single outer card: form (left) + live result (right) — matches design */}
+        <div
+          className="grid gap-8 rounded-2xl border border-border bg-card p-5 sm:p-8 lg:grid-cols-[1.35fr_1fr] lg:gap-10"
+          style={{ boxShadow: "var(--shadow-card)" }}
+        >
           <CalculatorForm content={content} form={form} />
           <ResultSummary content={content} estimate={estimate} />
         </div>

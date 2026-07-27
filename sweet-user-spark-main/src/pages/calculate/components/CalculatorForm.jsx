@@ -1,13 +1,12 @@
 /**
  * CalculatorForm.jsx — Calculate page
- * Two-column card layout matching the design:
+ * Two-column field grid inside the shared outer card:
  *   Name | Company
  *   Industry (full)
  *   Status (full)
  *   Salary | Hours
  *   First day | Last day
  *   Linked absence (full)
- * All copy / constraints from ACF `content`.
  */
 import { CalendarDays, Info, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -30,6 +29,8 @@ export function CalculatorForm({ content, form }) {
     setStatus,
     linked,
     setLinked,
+    linkedFirstDay,
+    setLinkedFirstDay,
     linkedLastDay,
     setLinkedLastDay,
     salary,
@@ -70,13 +71,8 @@ export function CalculatorForm({ content, form }) {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-2xl border border-border bg-card p-6 sm:p-8"
-      style={{ boxShadow: "var(--shadow-card)" }}
-    >
+    <form onSubmit={handleSubmit} className="min-w-0">
       <div className="grid gap-5 sm:grid-cols-2">
-        {/* Row 1 — Name | Company */}
         <FormField label={calc.nameLabel}>
           <Input placeholder={calc.namePlaceholder} />
         </FormField>
@@ -84,7 +80,6 @@ export function CalculatorForm({ content, form }) {
           <Input placeholder={calc.companyPlaceholder} />
         </FormField>
 
-        {/* Row 2 — Industry (full width) */}
         <FormField
           label={calc.industryLabel}
           hint={calc.industryHint}
@@ -104,7 +99,6 @@ export function CalculatorForm({ content, form }) {
           </Select>
         </FormField>
 
-        {/* Row 3 — Employment status (full width) */}
         <FormField label={calc.statusLabel} className="sm:col-span-2">
           <RadioGroup
             value={status}
@@ -127,7 +121,6 @@ export function CalculatorForm({ content, form }) {
           </RadioGroup>
         </FormField>
 
-        {/* Row 4 — Salary | Hours */}
         <FormField label={calc.salaryLabel}>
           <Input
             type="number"
@@ -140,7 +133,10 @@ export function CalculatorForm({ content, form }) {
             onChange={(e) => setSalary(e.target.value.replace(/[^\d.]/g, ""))}
           />
         </FormField>
-        <FormField label={calc.hoursLabel}>
+        <FormField
+          label={calc.hoursLabel}
+          hint={`Full-time baseline: ${rules.fullTimeHours || 40} hrs (from Pay Rules)`}
+        >
           <Input
             type="number"
             inputMode="numeric"
@@ -153,7 +149,6 @@ export function CalculatorForm({ content, form }) {
           />
         </FormField>
 
-        {/* Row 5 — First day | Last day */}
         <FormField label={calc.firstDayLabel} hint={calc.firstDayHint}>
           <div className="relative">
             <Input
@@ -175,7 +170,6 @@ export function CalculatorForm({ content, form }) {
           </div>
         </FormField>
 
-        {/* Row 6 — Linked absence (full width) */}
         <div className="sm:col-span-2">
           <div className="flex items-start justify-between gap-4 rounded-lg border border-border bg-secondary/40 p-4">
             <div>
@@ -185,7 +179,19 @@ export function CalculatorForm({ content, form }) {
             <Switch checked={linked} onCheckedChange={setLinked} />
           </div>
           {linked && (
-            <div className="mt-4">
+            <div className="mt-4 grid gap-5 sm:grid-cols-2">
+              <FormField
+                label={calc.linkedFirstDayLabel || "First day of that earlier sick leave"}
+              >
+                <div className="relative">
+                  <Input
+                    type="date"
+                    value={linkedFirstDay}
+                    onChange={(e) => setLinkedFirstDay(e.target.value)}
+                  />
+                  <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                </div>
+              </FormField>
               <FormField label={calc.linkedLastDayLabel}>
                 <div className="relative">
                   <Input
@@ -197,7 +203,9 @@ export function CalculatorForm({ content, form }) {
                 </div>
               </FormField>
               {linkedAbsenceFlag && (
-                <p className="mt-2 text-xs font-medium text-accent">{linkedFlagMessage}</p>
+                <p className="sm:col-span-2 text-xs font-medium text-accent">
+                  {linkedFlagMessage}
+                </p>
               )}
             </div>
           )}
@@ -206,7 +214,7 @@ export function CalculatorForm({ content, form }) {
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6">
         <p className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Info className="h-3.5 w-3.5" />
+          <Info className="h-3.5 w-3.5 shrink-0" />
           {content.disclaimer}
         </p>
         <Button type="submit" size="lg" className="gap-2">
