@@ -1,18 +1,41 @@
 /**
  * ResultSummary.jsx — Calculate page
- * Sticky right-hand column: live entitlement result + policy analyser CTA.
- *
- * Percentages shown in titles come from content.rules (same source the maths
- * uses). Title templates may include `{percent}` — substituted at render time.
+ * Live blue “Your entitlement” card. Updates as the visitor types salary
+ * (estimate from content.rules). Policy button + link live in this section.
  */
 import { ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { StatRow } from "@/components/shared/StatRow";
-import { formatTemplate } from "../content";
+import { formatTemplate, resolveHref } from "../content";
+
+function PolicyLink({ href, className, children }) {
+  const to = resolveHref(href, "/policy-analyser");
+  const isExternal = /^https?:\/\//i.test(to);
+  const isInternal = to.startsWith("/") && !isExternal;
+
+  if (isInternal) {
+    return (
+      <Link to={to} className={className}>
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <a
+      href={to}
+      className={className}
+      {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+    >
+      {children}
+    </a>
+  );
+}
 
 export function ResultSummary({ content, estimate }) {
   const result = content.result;
   const rules = content.rules;
+  const cta = content.policyAnalyserCta;
 
   const year1Title = formatTemplate(result.year1Title, {
     percent: rules.year1Percent,
@@ -61,18 +84,16 @@ export function ResultSummary({ content, estimate }) {
         </p>
       </div>
 
-      <Link
-        to="/policy-analyser"
+      <PolicyLink
+        href={cta.link}
         className="mt-4 flex items-center justify-between rounded-xl border border-border bg-card p-4 text-sm transition-colors hover:border-accent hover:bg-accent/5"
       >
         <div>
-          <p className="font-medium text-foreground">{content.policyAnalyserCta.title}</p>
-          <p className="text-xs text-muted-foreground">
-            {content.policyAnalyserCta.description}
-          </p>
+          <p className="font-medium text-foreground">{cta.title}</p>
+          <p className="text-xs text-muted-foreground">{cta.description}</p>
         </div>
         <ArrowRight className="h-4 w-4 text-muted-foreground" />
-      </Link>
+      </PolicyLink>
     </aside>
   );
 }

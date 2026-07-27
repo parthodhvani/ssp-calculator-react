@@ -1,29 +1,28 @@
 /**
  * content.js — Calculate page
  * ---------------------------------------------------------------------------
- * Single source of truth for every editable string/number on the Calculate
- * page. WordPress/ACF overlays these defaults at runtime via
- * useCalculatorContent(). If WP is unreachable, this object is used as-is.
- *
- * WordPress editors use 9 client-friendly ACF tabs/groups (see
- * /wp-acf/acf-field-group.json). mapAcfResponseToContent() maps those groups
- * onto this shape. Defaults below are used when WP is offline.
+ * Fallback content when WordPress is offline. Editors manage the live values
+ * via the step-by-step ACF tabs on the Calculate page
+ * (see /wp-acf/acf-field-group.json).
  * ---------------------------------------------------------------------------
  */
 
 export const DEFAULT_CONTENT = {
   hero: {
-    badge: "Art. 7:629 · minimum wage July 2026",
+    // Two pills as on the design (ART. 7:629 | MINIMUM WAGE JULY 2026)
+    badge1: "ART. 7:629",
+    badge2: "MINIMUM WAGE JULY 2026",
     titleLine1: "Netherlands sick leave,",
     titleHighlight: "calculated properly",
     titleSuffix: "— and explained.",
     description:
       "Enter a few details from any industry and get a real euro estimate of continued pay during illness, an AI assistant for follow-up questions, and a tool that reads your own policy against Dutch law.",
     ctaLabel: "Start calculating",
+    ctaLink: "#calculator",
     secondaryCtaLabel: "Not sure you're covered? Eligibility guide →",
+    secondaryCtaLink: "/eligibility",
   },
 
-  // ACF field: stats (repeater) — stat_value / stat_label
   stats: [
     { value: "104", label: "weeks max entitlement" },
     { value: "70%", label: "statutory floor" },
@@ -43,7 +42,6 @@ export const DEFAULT_CONTENT = {
     perMonthSuffix: "/mo",
   },
 
-  // ACF field: industries (repeater of industry_name)
   industries: [
     "IT & Software",
     "Manufacturing & Industrial",
@@ -64,10 +62,6 @@ export const DEFAULT_CONTENT = {
       "Everything is computed in your browser — nothing is sent anywhere until you ask for the full report.",
   },
 
-  /**
-   * Form labels / defaults / constraints — all ACF-driven.
-   * Salary & hours min/max/step control the HTML inputs.
-   */
   calculator: {
     nameLabel: "Your name",
     namePlaceholder: "e.g. Jordan Vance",
@@ -103,21 +97,16 @@ export const DEFAULT_CONTENT = {
     lastDayLabel: "Last day (leave blank if still off)",
 
     linkedLabel: "Linked earlier absence?",
-    // {weeks} = linkedAbsenceWindowDays / 7, {maxWeeks} = rules.maxWeeks
     linkedDescription:
       "A new absence within {weeks} weeks of the last one is legally linked — it counts toward the same {maxWeeks}-week limit.",
     linkedLastDayLabel: "Last day of that earlier sick leave",
-    // {maxWeeks} = rules.maxWeeks
     linkedFlagMessage:
       "These absences are linked — they share one {maxWeeks}-week entitlement.",
 
     submitLabel: "Calculate my entitlement",
+    submitLink: "",
   },
 
-  /**
-   * Calculation rules — THE only place percentages / week limits live.
-   * Display and maths both read from here. Never hardcode these in JSX.
-   */
   rules: {
     year1Percent: 100,
     year2Percent: 70,
@@ -127,24 +116,17 @@ export const DEFAULT_CONTENT = {
     linkedAbsenceWindowDays: 28,
   },
 
-  /**
-   * Result card copy. Titles may include `{percent}` which is replaced with
-   * the matching rules.yearNPercent at render time — one source of truth.
-   */
   result: {
     kicker: "Your entitlement",
     emptyAmount: "€ —",
     perMonthSuffix: "/mo",
-    // {percent} → content.rules.year1Percent
     year1Title: "Year 1 · {percent}% of gross (statutory)",
-    // {percent} → content.rules.year2Percent
     year2Title: "Year 2 · {percent}% of gross",
     year2PayLabel: "Year 2 pay",
     totalLabel: "Cumulative (24 mo)",
     monthlyLabel: "Monthly",
     maxWeeksLabel: "Weeks remaining",
     waitingDaysLabel: "Waiting day(s)",
-    // {days} → rules.waitingDays
     waitingDaysValue: "{days} day(s) (wachtdag)",
     linkedAbsenceLabel: "Linked absence window",
     footnote:
@@ -156,7 +138,6 @@ export const DEFAULT_CONTENT = {
     title: "Three tools, one source of truth.",
   },
 
-  // ACF field: how_it_works (repeater)
   howItWorks: [
     {
       number: "01",
@@ -180,19 +161,24 @@ export const DEFAULT_CONTENT = {
   policyAnalyserCta: {
     title: "Check your own policy",
     description: "Upload contract / CAO — AI checks it against Dutch rules.",
+    link: "/policy-analyser",
   },
 
   disclaimer: "Illustrative estimate — not legal advice.",
 };
 
-/**
- * Replace `{token}` placeholders in an ACF-driven string.
- * e.g. formatTemplate("Year 1 · {percent}%", { percent: 75 })
- *   → "Year 1 · 75%"
- */
 export function formatTemplate(template, vars = {}) {
   if (!template) return "";
   return String(template).replace(/\{(\w+)\}/g, (_, key) =>
     vars[key] != null ? String(vars[key]) : `{${key}}`,
   );
+}
+
+/**
+ * Render an ACF-driven link: internal paths use <a href>, hashes stay on-page,
+ * absolute URLs open normally.
+ */
+export function resolveHref(link, fallback = "#") {
+  if (link == null || String(link).trim() === "") return fallback;
+  return String(link).trim();
 }
