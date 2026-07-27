@@ -1,10 +1,17 @@
 /**
  * QuestionItem.jsx — Eligibility page
- * A single numbered yes/no question card.
+ * A single numbered yes/no question card. Labels from ACF.
  */
 import { CheckCircle2, XCircle } from "lucide-react";
 
-export function QuestionItem({ index, item, value, onAnswer }) {
+export function QuestionItem({
+  index,
+  item,
+  value,
+  onAnswer,
+  yesLabel = "Yes",
+  noLabel = "No",
+}) {
   return (
     <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
       <div className="flex items-start gap-4">
@@ -13,11 +20,17 @@ export function QuestionItem({ index, item, value, onAnswer }) {
         </span>
         <div className="min-w-0 flex-1">
           <p className="font-serif text-lg leading-snug text-foreground">{item.q}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{item.hint}</p>
+          {item.hint ? (
+            <p className="mt-1 text-sm text-muted-foreground">{item.hint}</p>
+          ) : null}
           <div className="mt-4 flex gap-2">
-            {["yes", "no"].map((opt) => (
+            {[
+              { opt: "yes", label: yesLabel },
+              { opt: "no", label: noLabel },
+            ].map(({ opt, label }) => (
               <button
                 key={opt}
+                type="button"
                 onClick={() => onAnswer(item.id, opt)}
                 className={`inline-flex items-center gap-1.5 rounded-md border px-4 py-1.5 text-sm font-medium transition-colors ${
                   value === opt
@@ -32,7 +45,7 @@ export function QuestionItem({ index, item, value, onAnswer }) {
                 ) : (
                   <XCircle className="h-3.5 w-3.5" />
                 )}
-                {opt === "yes" ? "Yes" : "No"}
+                {label}
               </button>
             ))}
           </div>
