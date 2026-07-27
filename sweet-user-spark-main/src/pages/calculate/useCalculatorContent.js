@@ -1,16 +1,15 @@
 /**
  * useCalculatorContent.js
  * ---------------------------------------------------------------------------
- * Fetches ACF from WP page slug=calculate and maps it onto DEFAULT_CONTENT.
+ * Fetches ACF from the WordPress Calculate page and maps onto DEFAULT_CONTENT.
  *
- * Supports the final step-by-step ACF structure:
- *   hero (group), sample (group), stats, section,
- *   flat form_* / salary_* / hours_* fields (line-by-line in admin),
- *   industries (inside Calculator Form tab),
- *   rules (group), result (group, includes policy button + link),
- *   how_it_works_section, how_it_works
+ * Configure in `.env`:
+ *   VITE_WP_API_URL=https://devwp1.websiteserverhost.biz/ssp-calculator
+ *   VITE_WP_CALCULATE_PAGE_ID=130
  *
- * Also accepts older nested/flat shapes for backwards compatibility.
+ * Prefer page ID when set (exact page). Otherwise falls back to slug query.
+ * Example resolved URL:
+ *   {VITE_WP_API_URL}/wp-json/wp/v2/pages/130
  *
  * Returns: { content, isLoading, isFallback, error }
  * ---------------------------------------------------------------------------
@@ -20,11 +19,21 @@ import { useEffect, useState } from "react";
 import { DEFAULT_CONTENT } from "./content";
 
 const WP_API_URL = import.meta.env.VITE_WP_API_URL;
+const PAGE_ID = import.meta.env.VITE_WP_CALCULATE_PAGE_ID;
 const PAGE_SLUG = import.meta.env.VITE_WP_CALCULATE_SLUG || "calculate";
 
-const ACF_ENDPOINT = WP_API_URL
-  ? `${WP_API_URL.replace(/\/$/, "")}/wp-json/wp/v2/pages?slug=${encodeURIComponent(PAGE_SLUG)}&_fields=id,slug,acf`
-  : null;
+function buildAcfEndpoint() {
+  if (!WP_API_URL) return null;
+  const base = WP_API_URL.replace(/\/$/, "");
+  // Prefer exact page ID (e.g. /wp-json/wp/v2/pages/130)
+  if (PAGE_ID) {
+    return `${base}/wp-json/wp/v2/pages/${encodeURIComponent(String(PAGE_ID).trim())}`;
+  }
+  // Fallback: find by slug
+  return `${base}/wp-json/wp/v2/pages?slug=${encodeURIComponent(PAGE_SLUG)}&_fields=id,slug,acf`;
+}
+
+const ACF_ENDPOINT = buildAcfEndpoint();
 
 function num(value, fallback) {
   if (value === "" || value == null) return fallback;
