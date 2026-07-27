@@ -99,6 +99,7 @@ export const DEFAULT_CONTENT = {
     linkedLabel: "Linked earlier absence?",
     linkedDescription:
       "A new absence within {weeks} weeks of the last one is legally linked — it counts toward the same {maxWeeks}-week limit.",
+    linkedFirstDayLabel: "First day of that earlier sick leave",
     linkedLastDayLabel: "Last day of that earlier sick leave",
     linkedFlagMessage:
       "These absences are linked — they share one {maxWeeks}-week entitlement.",
@@ -114,6 +115,8 @@ export const DEFAULT_CONTENT = {
     waitingDays: 1,
     minWageMonthly: 2437,
     linkedAbsenceWindowDays: 28,
+    /** Full-time baseline used to prorate contracted hours */
+    fullTimeHours: 40,
   },
 
   result: {
@@ -121,7 +124,7 @@ export const DEFAULT_CONTENT = {
     emptyAmount: "€ —",
     perMonthSuffix: "/mo",
     year1Title: "Year 1 · {percent}% of gross (statutory)",
-    year2Title: "Year 2 · {percent}% of gross",
+    year2Title: "Year 2 · {percent}% of gross (statutory)",
     year2PayLabel: "Year 2 pay",
     totalLabel: "Cumulative (24 mo)",
     monthlyLabel: "Monthly",
@@ -129,6 +132,7 @@ export const DEFAULT_CONTENT = {
     waitingDaysLabel: "Waiting day(s)",
     waitingDaysValue: "{days} day(s) (wachtdag)",
     linkedAbsenceLabel: "Linked absence window",
+    hoursAdjustedLabel: "Hours-adjusted salary",
     footnote:
       "Based on Art. 7:629 of the Dutch Civil Code. CAO in your sector may raise the floor above statutory.",
   },

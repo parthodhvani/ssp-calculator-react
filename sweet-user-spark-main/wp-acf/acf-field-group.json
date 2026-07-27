@@ -604,6 +604,14 @@
         "default_value": "A new absence within {weeks} weeks of the last one is legally linked — it counts toward the same {maxWeeks}-week limit."
       },
       {
+        "key": "field_form_linked_first_day_label",
+        "label": "Linked absence — previous first-day label",
+        "name": "form_linked_first_day_label",
+        "type": "text",
+        "default_value": "First day of that earlier sick leave",
+        "instructions": "Needed so weeks remaining continues from the earlier absence clock."
+      },
+      {
         "key": "field_form_linked_last_day_label",
         "label": "Linked absence — previous last-day label",
         "name": "form_linked_last_day_label",
@@ -727,6 +735,15 @@
             "default_value": 2437,
             "prepend": "€",
             "append": "/ month"
+          },
+          {
+            "key": "field_rules_full_time_hours",
+            "label": "Full-time hours baseline",
+            "name": "full_time_hours",
+            "type": "number",
+            "instructions": "Used to prorate Gross monthly salary by Contracted hours. Example: 40 hrs full-time, employee on 20 hrs → pay is halved.",
+            "default_value": 40,
+            "append": "hrs / week"
           }
         ]
       },

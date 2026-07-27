@@ -379,6 +379,14 @@ export function mapAcfResponseToContent(acf) {
         ),
         d.linkedDescription,
       ),
+      linkedFirstDayLabel: str(
+        first(
+          acf.form_linked_first_day_label,
+          formG?.linked_first_day_label,
+          acf.calculator_linked_first_day_label,
+        ),
+        d.linkedFirstDayLabel,
+      ),
       linkedLastDayLabel: str(
         first(
           acf.form_linked_last_day_label,
@@ -440,6 +448,10 @@ export function mapAcfResponseToContent(acf) {
         first(rulesG?.linked_absence_days, acf.rules_linked_absence_days),
         d.linkedAbsenceWindowDays,
       ),
+      fullTimeHours: num(
+        first(rulesG?.full_time_hours, acf.rules_full_time_hours),
+        d.fullTimeHours,
+      ),
     };
   }
 
@@ -488,6 +500,10 @@ export function mapAcfResponseToContent(acf) {
       linkedAbsenceLabel: str(
         first(resultG?.linked_absence_label, acf.result_linked_absence_label),
         d.linkedAbsenceLabel,
+      ),
+      hoursAdjustedLabel: str(
+        first(resultG?.hours_adjusted_label, acf.result_hours_adjusted_label),
+        d.hoursAdjustedLabel,
       ),
       footnote: str(first(resultG?.footnote, acf.result_footnote), d.footnote),
     };
