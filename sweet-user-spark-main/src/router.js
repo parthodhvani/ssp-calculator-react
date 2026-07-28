@@ -9,6 +9,8 @@ export const getRouter = () => {
       queryClient,
     },
     scrollRestoration: true,
+    // Avoid double WP fetches from hover-preloading sidebar routes
+    defaultPreload: false,
     defaultPreloadStaleTime: 0,
   });
   return router;

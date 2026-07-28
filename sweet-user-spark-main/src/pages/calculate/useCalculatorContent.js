@@ -16,6 +16,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { fetchWpJson } from "../shared/fetchWpJson";
 
 const WP_API_URL = import.meta.env.VITE_WP_API_URL;
 const PAGE_ID = import.meta.env.VITE_WP_CALCULATE_PAGE_ID;
@@ -94,7 +95,7 @@ export function mapAcfResponseToContent(acf) {
       titleLine1: str(first(heroG?.title_line1, acf.hero_title_line1), ""),
       titleHighlight: str(
         first(heroG?.title_highlight, acf.hero_title_highlight),
-        d.titleHighlight,
+        "",
       ),
       titleSuffix: str(first(heroG?.title_suffix, acf.hero_title_suffix), ""),
       description: str(first(heroG?.description, acf.hero_description), ""),
@@ -102,11 +103,11 @@ export function mapAcfResponseToContent(acf) {
       ctaLink: str(first(heroG?.cta_link, acf.hero_cta_link), ""),
       secondaryCtaLabel: str(
         first(heroG?.secondary_cta_label, acf.hero_secondary_cta_label),
-        d.secondaryCtaLabel,
+        "",
       ),
       secondaryCtaLink: str(
         first(heroG?.secondary_cta_link, acf.hero_secondary_cta_link),
-        d.secondaryCtaLink,
+        "",
       ),
     };
   }
@@ -125,36 +126,36 @@ export function mapAcfResponseToContent(acf) {
       title: str(first(sampleG?.title, acf.sample_title), ""),
       coveredLabel: str(
         first(sampleG?.covered_label, acf.sample_covered_label),
-        d.coveredLabel,
+        "",
       ),
       amount: num(first(sampleG?.amount, acf.sample_amount), 0),
       periodLabel: str(
         first(sampleG?.period_label, acf.sample_period_label),
-        d.periodLabel,
+        "",
       ),
       currentWeek: num(
         first(sampleG?.current_week, acf.sample_current_week),
-        d.currentWeek,
+        0,
       ),
       weekZeroLabel: str(
         first(sampleG?.week_zero_label, acf.sample_week_zero_label),
-        d.weekZeroLabel,
+        "",
       ),
       weekProgressLabel: str(
         first(sampleG?.week_progress_label, acf.sample_week_progress_label),
-        d.weekProgressLabel,
+        "",
       ),
       year1BoxLabel: str(
         first(sampleG?.year1_box_label, acf.sample_year1_box_label),
-        d.year1BoxLabel,
+        "",
       ),
       year2BoxLabel: str(
         first(sampleG?.year2_box_label, acf.sample_year2_box_label),
-        d.year2BoxLabel,
+        "",
       ),
       perMonthSuffix: str(
         first(sampleG?.per_month_suffix, acf.sample_per_month_suffix),
-        d.perMonthSuffix,
+        "",
       ),
     };
   }
@@ -173,7 +174,7 @@ export function mapAcfResponseToContent(acf) {
       title: str(first(sectionG?.title, acf.section_title), ""),
       description: str(
         first(sectionG?.description, acf.section_description),
-        d.description,
+        "",
       ),
     };
   }
@@ -208,7 +209,7 @@ export function mapAcfResponseToContent(acf) {
     content.calculator = {
       nameLabel: str(
         first(acf.form_name_label, formG?.name_label, acf.calculator_name_label),
-        d.nameLabel,
+        "",
       ),
       namePlaceholder: str(
         first(
@@ -216,7 +217,7 @@ export function mapAcfResponseToContent(acf) {
           formG?.name_placeholder,
           acf.calculator_name_placeholder,
         ),
-        d.namePlaceholder,
+        "",
       ),
       companyLabel: str(
         first(
@@ -224,7 +225,7 @@ export function mapAcfResponseToContent(acf) {
           formG?.company_label,
           acf.calculator_company_label,
         ),
-        d.companyLabel,
+        "",
       ),
       companyPlaceholder: str(
         first(
@@ -232,11 +233,11 @@ export function mapAcfResponseToContent(acf) {
           formG?.company_placeholder,
           acf.calculator_company_placeholder,
         ),
-        d.companyPlaceholder,
+        "",
       ),
       companyHint: str(
         first(acf.form_company_hint, formG?.company_hint, acf.calculator_company_hint),
-        d.companyHint,
+        "",
       ),
       industryLabel: str(
         first(
@@ -244,7 +245,7 @@ export function mapAcfResponseToContent(acf) {
           formG?.industry_label,
           acf.calculator_industry_label,
         ),
-        d.industryLabel,
+        "",
       ),
       industryPlaceholder: str(
         first(
@@ -252,7 +253,7 @@ export function mapAcfResponseToContent(acf) {
           formG?.industry_placeholder,
           acf.calculator_industry_placeholder,
         ),
-        d.industryPlaceholder,
+        "",
       ),
       industryHint: str(
         first(
@@ -260,11 +261,11 @@ export function mapAcfResponseToContent(acf) {
           formG?.industry_hint,
           acf.calculator_industry_hint,
         ),
-        d.industryHint,
+        "",
       ),
       statusLabel: str(
         first(acf.form_status_label, formG?.status_label, acf.calculator_status_label),
-        d.statusLabel,
+        "",
       ),
       statusOptions,
       statusDefault: str(
@@ -273,12 +274,12 @@ export function mapAcfResponseToContent(acf) {
           formG?.status_default,
           acf.calculator_status_default,
         ),
-        d.statusDefault,
+        "",
       ),
 
       salaryLabel: str(
         first(acf.salary_label, salaryG?.label, acf.calculator_salary_label),
-        d.salaryLabel,
+        "",
       ),
       salaryPlaceholder: str(
         first(
@@ -286,7 +287,7 @@ export function mapAcfResponseToContent(acf) {
           salaryG?.placeholder,
           acf.calculator_salary_placeholder,
         ),
-        d.salaryPlaceholder,
+        "",
       ),
       salaryDefault: str(
         first(
@@ -294,24 +295,24 @@ export function mapAcfResponseToContent(acf) {
           salaryG?.default_value,
           acf.calculator_salary_default,
         ),
-        d.salaryDefault,
+        "",
       ),
       salaryMin: num(
         first(acf.salary_min, salaryG?.min, acf.calculator_salary_min),
-        d.salaryMin,
+        0,
       ),
       salaryMax: num(
         first(acf.salary_max, salaryG?.max, acf.calculator_salary_max),
-        d.salaryMax,
+        0,
       ),
       salaryStep: num(
         first(acf.salary_step, salaryG?.step, acf.calculator_salary_step),
-        d.salaryStep,
+        0,
       ),
 
       hoursLabel: str(
         first(acf.hours_label, hoursG?.label, acf.calculator_hours_label),
-        d.hoursLabel,
+        "",
       ),
       hoursPlaceholder: str(
         first(
@@ -319,23 +320,23 @@ export function mapAcfResponseToContent(acf) {
           hoursG?.placeholder,
           acf.calculator_hours_placeholder,
         ),
-        d.hoursPlaceholder,
+        "",
       ),
       hoursDefault: str(
         first(acf.hours_default, hoursG?.default_value, acf.calculator_hours_default),
-        d.hoursDefault,
+        "",
       ),
       hoursMin: num(
         first(acf.hours_min, hoursG?.min, acf.calculator_hours_min),
-        d.hoursMin,
+        0,
       ),
       hoursMax: num(
         first(acf.hours_max, hoursG?.max, acf.calculator_hours_max),
-        d.hoursMax,
+        0,
       ),
       hoursStep: num(
         first(acf.hours_step, hoursG?.step, acf.calculator_hours_step),
-        d.hoursStep,
+        0,
       ),
 
       firstDayLabel: str(
@@ -344,7 +345,7 @@ export function mapAcfResponseToContent(acf) {
           formG?.first_day_label,
           acf.calculator_first_day_label,
         ),
-        d.firstDayLabel,
+        "",
       ),
       firstDayHint: str(
         first(
@@ -352,7 +353,7 @@ export function mapAcfResponseToContent(acf) {
           formG?.first_day_hint,
           acf.calculator_first_day_hint,
         ),
-        d.firstDayHint,
+        "",
       ),
       lastDayLabel: str(
         first(
@@ -360,11 +361,11 @@ export function mapAcfResponseToContent(acf) {
           formG?.last_day_label,
           acf.calculator_last_day_label,
         ),
-        d.lastDayLabel,
+        "",
       ),
       linkedLabel: str(
         first(acf.form_linked_label, formG?.linked_label, acf.calculator_linked_label),
-        d.linkedLabel,
+        "",
       ),
       linkedDescription: str(
         first(
@@ -372,7 +373,7 @@ export function mapAcfResponseToContent(acf) {
           formG?.linked_description,
           acf.calculator_linked_description,
         ),
-        d.linkedDescription,
+        "",
       ),
       linkedFirstDayLabel: str(
         first(
@@ -380,7 +381,7 @@ export function mapAcfResponseToContent(acf) {
           formG?.linked_first_day_label,
           acf.calculator_linked_first_day_label,
         ),
-        d.linkedFirstDayLabel,
+        "",
       ),
       linkedLastDayLabel: str(
         first(
@@ -388,7 +389,7 @@ export function mapAcfResponseToContent(acf) {
           formG?.linked_last_day_label,
           acf.calculator_linked_last_day_label,
         ),
-        d.linkedLastDayLabel,
+        "",
       ),
       linkedFlagMessage: str(
         first(
@@ -396,7 +397,7 @@ export function mapAcfResponseToContent(acf) {
           formG?.linked_flag_message,
           acf.calculator_linked_flag_message,
         ),
-        d.linkedFlagMessage,
+        "",
       ),
       submitLabel: str(
         first(
@@ -404,11 +405,11 @@ export function mapAcfResponseToContent(acf) {
           formG?.submit_label,
           acf.calculator_submit_label,
         ),
-        d.submitLabel,
+        "",
       ),
       submitLink: str(
         first(acf.form_submit_link, formG?.submit_link, acf.calculator_submit_link),
-        d.submitLink,
+        "",
       ),
     };
   }
@@ -423,28 +424,28 @@ export function mapAcfResponseToContent(acf) {
     content.rules = {
       year1Percent: num(
         first(rulesG?.year1_percent, acf.rules_year1_percent, acf.year1_percentage),
-        d.year1Percent,
+        0,
       ),
       year2Percent: num(
         first(rulesG?.year2_percent, acf.rules_year2_percent, acf.year2_percentage),
-        d.year2Percent,
+        0,
       ),
       maxWeeks: num(first(rulesG?.max_weeks, acf.rules_max_weeks), 0),
       waitingDays: num(
         first(rulesG?.waiting_days, acf.rules_waiting_days),
-        d.waitingDays,
+        0,
       ),
       minWageMonthly: num(
         first(rulesG?.min_wage_monthly, acf.rules_min_wage_monthly),
-        d.minWageMonthly,
+        0,
       ),
       linkedAbsenceWindowDays: num(
         first(rulesG?.linked_absence_days, acf.rules_linked_absence_days),
-        d.linkedAbsenceWindowDays,
+        0,
       ),
       fullTimeHours: num(
         first(rulesG?.full_time_hours, acf.rules_full_time_hours),
-        d.fullTimeHours,
+        0,
       ),
     };
   }
@@ -455,48 +456,48 @@ export function mapAcfResponseToContent(acf) {
       kicker: str(first(resultG?.kicker, acf.result_kicker), ""),
       emptyAmount: str(
         first(resultG?.empty_amount, acf.result_empty_amount),
-        d.emptyAmount,
+        "",
       ),
       perMonthSuffix: str(
         first(resultG?.per_month_suffix, acf.result_per_month_suffix),
-        d.perMonthSuffix,
+        "",
       ),
       year1Title: str(
         first(resultG?.year1_title, acf.year1_result_title),
-        d.year1Title,
+        "",
       ),
       year2Title: str(
         first(resultG?.year2_title, acf.year2_result_title),
-        d.year2Title,
+        "",
       ),
       year2PayLabel: str(
         first(resultG?.year2_pay_label, acf.result_year2_pay_label),
-        d.year2PayLabel,
+        "",
       ),
       totalLabel: str(first(resultG?.total_label, acf.result_total_label), ""),
       monthlyLabel: str(
         first(resultG?.monthly_label, acf.result_monthly_label),
-        d.monthlyLabel,
+        "",
       ),
       maxWeeksLabel: str(
         first(resultG?.max_weeks_label, acf.result_max_weeks_label),
-        d.maxWeeksLabel,
+        "",
       ),
       waitingDaysLabel: str(
         first(resultG?.waiting_days_label, acf.result_waiting_days_label),
-        d.waitingDaysLabel,
+        "",
       ),
       waitingDaysValue: str(
         first(resultG?.waiting_days_value, acf.result_waiting_days_value),
-        d.waitingDaysValue,
+        "",
       ),
       linkedAbsenceLabel: str(
         first(resultG?.linked_absence_label, acf.result_linked_absence_label),
-        d.linkedAbsenceLabel,
+        "",
       ),
       hoursAdjustedLabel: str(
         first(resultG?.hours_adjusted_label, acf.result_hours_adjusted_label),
-        d.hoursAdjustedLabel,
+        "",
       ),
       footnote: str(first(resultG?.footnote, acf.result_footnote), ""),
     };
@@ -683,9 +684,7 @@ export function useCalculatorContent() {
     async function load() {
       console.info("[Calculate] Fetching ACF from", ACF_ENDPOINT);
       try {
-        const res = await fetch(ACF_ENDPOINT);
-        if (!res.ok) throw new Error(`WP REST API responded ${res.status}`);
-        const json = await res.json();
+        const json = await fetchWpJson(ACF_ENDPOINT);
         const page = Array.isArray(json) ? json[0] : json;
         const acf = page?.acf;
 

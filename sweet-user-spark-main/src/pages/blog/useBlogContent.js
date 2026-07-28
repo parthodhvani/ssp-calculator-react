@@ -3,6 +3,7 @@
  * Relationship field `posts` on the Blog page.
  */
 import { useEffect, useState } from "react";
+import { fetchWpJson } from "../shared/fetchWpJson";
 
 const WP_API_URL = import.meta.env.VITE_WP_API_URL;
 const PAGE_ID = import.meta.env.VITE_WP_BLOG_PAGE_ID;
@@ -172,9 +173,7 @@ export function useBlogContent() {
 
     async function load() {
       try {
-        const res = await fetch(ACF_ENDPOINT);
-        if (!res.ok) throw new Error(`WP REST API responded ${res.status}`);
-        const json = await res.json();
+        const json = await fetchWpJson(ACF_ENDPOINT);
         const page = Array.isArray(json) ? json[0] : json;
         const acf = page?.acf;
 
