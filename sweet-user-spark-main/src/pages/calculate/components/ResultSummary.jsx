@@ -1,7 +1,5 @@
 /**
  * ResultSummary.jsx — Calculate page
- * Live blue “Your entitlement” card.
- * Updates from salary, contracted hours, and sick-leave dates.
  */
 import { ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -32,25 +30,75 @@ function PolicyLink({ href, className, children }) {
   );
 }
 
-export function ResultSummary({ content, estimate }) {
-  const result = content.result;
-  const cta = content.policyAnalyserCta;
+export function ResultSummary({ content, estimate, linkNote }) {
+  // Guard against missing content
+  if (!content) {
+    return (
+      <div className="rounded-2xl bg-primary p-8 text-primary-foreground">
+        <p className="text-sm opacity-70">Calculating your estimate...</p>
+      </div>
+    );
+  }
 
-  const percent = estimate?.currentPercent ?? content.rules.year1Percent;
-  const year1Title = formatTemplate(result.year1Title, { percent });
-  // When in year 2, still show a clear year line using current percent
-  const headlineTitle =
-    estimate?.currentYear === 2
-      ? formatTemplate(result.year2Title, {
-          percent,
-        })
-      : year1Title;
+  // ---- SAFE DEFAULTS ----
+  const result = content.result || {};
+  const cta = content.policyAnalyserCta || {};
+  const rules = content.rules || {};
 
-  const waitingDaysValue = formatTemplate(result.waitingDaysValue, {
-    days: estimate?.waitingDays ?? content.rules.waitingDays,
-  });
+  const formatCurrency = (value) =>
+    value != null ? `€ ${value.toLocaleString("en")}` : "—";
 
+  const formatWeeks = (value) =>
+    value != null ? `${value} week${value !== 1 ? "s" : ""}` : "—";
+
+  // Main amount
   const mainAmount = estimate?.currentMonthly ?? estimate?.year1Monthly;
+
+  // Subtitle with cap note
+  const percent = estimate?.currentPercent ?? rules.year1Percent;
+  let subtitle = percent != null ? `Based on ${percent}% of your gross salary` : "";
+  if (estimate?.wageCapApplied && estimate?.wageCapMonthly) {
+    subtitle += ` (capped at €${estimate.wageCapMonthly.toLocaleString("en")}/month)`;
+  }
+
+  // Entitlement breakdown
+  const maxWeeks = estimate?.maxWeeks;
+  const usedWeeks = estimate?.weeksElapsed;
+  const remainingWeeks = estimate?.weeksRemaining;
+  const absenceWeeks = estimate?.absenceWeeks;
+  const effectiveLinked = estimate?.effectiveLinked;
+
+  let previousWeeks = null;
+  let currentWeeks = null;
+
+  if (effectiveLinked && absenceWeeks != null && usedWeeks != null) {
+    previousWeeks = Math.max(0, usedWeeks - absenceWeeks);
+    currentWeeks = absenceWeeks;
+  } else {
+    currentWeeks = usedWeeks;
+  }
+
+  const usedTotalPayment =
+    usedWeeks != null && usedWeeks > 0 && estimate?.currentMonthly != null
+      ? Math.round(estimate.currentMonthly * (usedWeeks / (52 / 12)))
+      : null;
+
+  const waitingDaysValue =
+    estimate?.waitingDays != null
+      ? estimate.waitingDays === 0
+        ? "No waiting days"
+        : `${estimate.waitingDays} waiting day${estimate.waitingDays !== 1 ? "s" : ""}`
+      : "—";
+
+  const linkedValue =
+    effectiveLinked != null
+      ? effectiveLinked
+        ? "Yes – included in calculation"
+        : "No"
+      : "—";
+
+  const footerText =
+    result.footnote || "Based on Article 7:629 of the Dutch Civil Code. CAO agreements may provide higher benefits.";
 
   return (
     <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start">
@@ -59,50 +107,72 @@ export function ResultSummary({ content, estimate }) {
         style={{ boxShadow: "var(--shadow-elegant)" }}
       >
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-primary-foreground/60">
-          {result.kicker}
+          {result.kicker || "Estimated sick pay entitlement"}
         </p>
-        <p className="mt-3 font-serif text-4xl leading-tight">
-          {mainAmount != null
-            ? `€ ${mainAmount.toLocaleString("en")}`
-            : result.emptyAmount}
-          <span className="text-lg text-primary-foreground/60">
-            {result.perMonthSuffix}
-          </span>
-        </p>
-        <p className="mt-1 text-sm text-primary-foreground/70">{headlineTitle}</p>
 
+        <p className="mt-4 font-serif text-4xl leading-tight">
+          {mainAmount != null ? `€ ${mainAmount.toLocaleString("en")}` : result.emptyAmount || "—"}
+          <span className="text-lg text-primary-foreground/60"> /month</span>
+        </p>
+        {subtitle && <p className="mt-1 text-sm text-primary-foreground/70">{subtitle}</p>}
+
+        {/* Entitlement breakdown */}
         <div className="mt-6 space-y-3 border-t border-primary-foreground/10 pt-5 text-sm">
-          <StatRow label={result.year2PayLabel}>
-            {estimate
-              ? `€ ${estimate.year2Monthly.toLocaleString("en")}${result.perMonthSuffix}`
-              : "—"}
-          </StatRow>
-          <StatRow label={result.totalLabel}>
-            {estimate ? `€ ${estimate.totalOverMaxTerm.toLocaleString("en")}` : "—"}
-          </StatRow>
-          <StatRow label={result.maxWeeksLabel}>
-            {estimate ? estimate.weeksRemaining : content.rules.maxWeeks}
-          </StatRow>
-          <StatRow label={result.waitingDaysLabel}>{waitingDaysValue}</StatRow>
-          {estimate?.contractedHours != null && estimate.hourFactor !== 1 && (
-            <StatRow label={result.hoursAdjustedLabel}>
-              {`€ ${estimate.effectiveMonthly.toLocaleString("en")}${result.perMonthSuffix}`}
+          {maxWeeks != null && <StatRow label="Total entitlement period">{formatWeeks(maxWeeks)}</StatRow>}
+          {previousWeeks != null && previousWeeks > 0 && (
+            <StatRow label="Previous sickness period">{formatWeeks(previousWeeks)} used</StatRow>
+          )}
+          {currentWeeks != null && (
+            <StatRow label={previousWeeks != null ? "Current sickness period" : "Used so far"}>
+              {formatWeeks(currentWeeks)} {previousWeeks != null ? "used" : ""}
             </StatRow>
+          )}
+          {usedTotalPayment != null && (
+            <StatRow label="Total payment for used weeks">{formatCurrency(usedTotalPayment)}</StatRow>
+          )}
+          {remainingWeeks != null && (
+            <StatRow label="Remaining entitlement">{formatWeeks(remainingWeeks)} remaining</StatRow>
           )}
         </div>
 
-        <p className="mt-6 text-xs leading-relaxed text-primary-foreground/60">
-          {result.footnote}
-        </p>
+        {/* Payment details */}
+        <div className="mt-4 space-y-3 border-t border-primary-foreground/10 pt-5 text-sm">
+          {estimate?.currentYear != null && (
+            <StatRow label="Current payment period">
+              {estimate.currentYear === 1
+                ? `Year 1 (weeks 1–${estimate.year1Weeks ?? 52})`
+                : `Year 2 (after ${estimate.year1Weeks ?? 52} weeks)`}
+            </StatRow>
+          )}
+          {estimate?.year2Monthly != null && (
+            <StatRow label="Year 2 payment">{formatCurrency(estimate.year2Monthly)} /month</StatRow>
+          )}
+          {estimate?.totalOverMaxTerm != null && (
+            <StatRow label="Maximum estimated payment">{formatCurrency(estimate.totalOverMaxTerm)}</StatRow>
+          )}
+          <StatRow label="Waiting period">{waitingDaysValue}</StatRow>
+          <StatRow label="Previous sickness linked">{linkedValue}</StatRow>
+          {linkNote && <div className="mt-1 text-xs text-primary-foreground/70 leading-relaxed">{linkNote}</div>}
+        </div>
+
+        {/* Warning */}
+        {estimate?.belowMinWage && (
+          <div className="mt-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+            <p className="font-medium">⚠️ Your calculated sick pay may require review because it is below the minimum wage threshold.</p>
+          </div>
+        )}
+
+        <p className="mt-6 text-xs leading-relaxed text-primary-foreground/60">{footerText}</p>
       </div>
 
+      {/* Policy CTA – safe fallback */}
       <PolicyLink
-        href={cta.link}
+        href={cta.link || "#"}
         className="mt-4 flex items-center justify-between rounded-xl border border-border bg-background p-4 text-sm transition-colors hover:border-accent hover:bg-accent/5"
       >
         <div>
-          <p className="font-medium text-foreground">{cta.title}</p>
-          <p className="text-xs text-muted-foreground">{cta.description}</p>
+          <p className="font-medium text-foreground">{cta.title || "Policy Analyser"}</p>
+          <p className="text-xs text-muted-foreground">{cta.description || "See how your CAO affects your sick pay."}</p>
         </div>
         <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
       </PolicyLink>

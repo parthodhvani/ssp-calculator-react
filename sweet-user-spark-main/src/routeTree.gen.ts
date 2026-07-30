@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BlogRouteImport } from './routes/blog'
+import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as EligibilityRouteImport } from './routes/eligibility'
 import { Route as PolicyAnalyserRouteImport } from './routes/policy-analyser'
@@ -25,6 +26,11 @@ const IndexRoute = IndexRouteImport.update({
 const BlogRoute = BlogRouteImport.update({
   id: '/blog',
   path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalculatorRoute = CalculatorRouteImport.update({
+  id: '/calculator',
+  path: '/calculator',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -56,6 +62,7 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/blog': typeof BlogRoute
+  '/calculator': typeof CalculatorRoute
   '/contact': typeof ContactRoute
   '/eligibility': typeof EligibilityRoute
   '/policy-analyser': typeof PolicyAnalyserRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/blog': typeof BlogRoute
+  '/calculator': typeof CalculatorRoute
   '/contact': typeof ContactRoute
   '/eligibility': typeof EligibilityRoute
   '/policy-analyser': typeof PolicyAnalyserRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/blog': typeof BlogRoute
+  '/calculator': typeof CalculatorRoute
   '/contact': typeof ContactRoute
   '/eligibility': typeof EligibilityRoute
   '/policy-analyser': typeof PolicyAnalyserRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/blog'
+    | '/calculator'
     | '/contact'
     | '/eligibility'
     | '/policy-analyser'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/blog'
+    | '/calculator'
     | '/contact'
     | '/eligibility'
     | '/policy-analyser'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/blog'
+    | '/calculator'
     | '/contact'
     | '/eligibility'
     | '/policy-analyser'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BlogRoute: typeof BlogRoute
+  CalculatorRoute: typeof CalculatorRoute
   ContactRoute: typeof ContactRoute
   EligibilityRoute: typeof EligibilityRoute
   PolicyAnalyserRoute: typeof PolicyAnalyserRoute
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/blog'
       fullPath: '/blog'
       preLoaderRoute: typeof BlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calculator': {
+      id: '/calculator'
+      path: '/calculator'
+      fullPath: '/calculator'
+      preLoaderRoute: typeof CalculatorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -178,6 +198,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BlogRoute: BlogRoute,
+  CalculatorRoute: CalculatorRoute,
   ContactRoute: ContactRoute,
   EligibilityRoute: EligibilityRoute,
   PolicyAnalyserRoute: PolicyAnalyserRoute,

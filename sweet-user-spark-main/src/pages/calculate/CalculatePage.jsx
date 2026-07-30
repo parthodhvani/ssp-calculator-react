@@ -1,6 +1,4 @@
-/**
- * CalculatePage.jsx — all copy from ACF (no local DEFAULT_CONTENT).
- */
+// src/pages/CalculatePage.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCalculatorContent } from "./useCalculatorContent";
 import { calculateEntitlement, isLinkedAbsence } from "./entitlement";
@@ -9,10 +7,27 @@ import { AcfPageGate } from "../shared/AcfPageGate";
 import { HeroSection } from "./components/HeroSection";
 import { CalculatorForm } from "./components/CalculatorForm";
 import { ResultSummary } from "./components/ResultSummary";
+import { CalculationInformatics } from "./components/CalculationInformatics";
 import { HowItWorks } from "./components/HowItWorks";
+import { useReport } from "@/context/ReportContext";
+import { useRouter } from "@tanstack/react-router";
 
 export function CalculatePage() {
   const { content, isLoading, error, endpoint } = useCalculatorContent();
+  const { setReport, clearReport } = useReport();
+  const router = useRouter();
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash === '#calculator') {
+      const element = document.getElementById('calculator');
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [router.state.location.href]);
 
   useEffect(() => {
     if (import.meta.env.DEV) {
@@ -27,28 +42,27 @@ export function CalculatePage() {
   }, [endpoint, isLoading, error, content?.hero?.badge1, content?.rules?.year1Percent]);
 
   const calc = content?.calculator;
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [company, setCompany] = useState("");
+  const [industry, setIndustry] = useState("");
   const [status, setStatus] = useState("");
   const [linked, setLinked] = useState(false);
   const [linkedFirstDay, setLinkedFirstDay] = useState("");
   const [linkedLastDay, setLinkedLastDay] = useState("");
   const [salary, setSalary] = useState("");
-  const [hours, setHours] = useState("");
   const [firstDay, setFirstDay] = useState("");
   const [lastDay, setLastDay] = useState("");
 
-  const prevDefaults = useRef({ salary: "", hours: "", status: "" });
+  const prevDefaults = useRef({ salary: "", status: "" });
 
   useEffect(() => {
     if (!calc) return;
     const nextSalary = String(calc.salaryDefault ?? "");
-    const nextHours = String(calc.hoursDefault ?? "");
     const nextStatus = calc.statusDefault ?? "";
 
     setSalary((current) =>
       current === prevDefaults.current.salary ? nextSalary : current,
-    );
-    setHours((current) =>
-      current === prevDefaults.current.hours ? nextHours : current,
     );
     setStatus((current) =>
       current === prevDefaults.current.status ? nextStatus : current,
@@ -56,43 +70,108 @@ export function CalculatePage() {
 
     prevDefaults.current = {
       salary: nextSalary,
-      hours: nextHours,
       status: nextStatus,
     };
-  }, [calc?.salaryDefault, calc?.hoursDefault, calc?.statusDefault]);
+  }, [calc?.salaryDefault, calc?.statusDefault]);
 
   const linkedAbsenceFlag = useMemo(() => {
-    if (!content || !linked || !linkedLastDay || !firstDay) return false;
+    if (!content || !linkedLastDay || !firstDay) return false;
+    if (!linkedFirstDay) return false;
     return isLinkedAbsence(linkedLastDay, firstDay, content.rules);
-  }, [content, linked, linkedLastDay, firstDay]);
+  }, [content, linkedLastDay, firstDay, linkedFirstDay]);
 
   const estimate = useMemo(() => {
     if (!content) return null;
     return calculateEntitlement(
       {
         grossMonthlySalary: Number(salary) || 0,
-        contractedHours: Number(hours) || 0,
         firstDay,
         lastDay,
-        linked: linked && linkedAbsenceFlag,
-        linkedFirstDay: linked ? linkedFirstDay : "",
-        linkedLastDay: linked ? linkedLastDay : "",
+        linked: linkedAbsenceFlag,
+        linkedFirstDay: linkedAbsenceFlag ? linkedFirstDay : "",
+        linkedLastDay: linkedAbsenceFlag ? linkedLastDay : "",
       },
       content.rules,
     );
   }, [
     content,
     salary,
-    hours,
     firstDay,
     lastDay,
-    linked,
+    linkedAbsenceFlag,
     linkedFirstDay,
     linkedLastDay,
+  ]);
+
+  const linkNote = useMemo(() => {
+    if (!content || !linkedFirstDay || !linkedLastDay || !firstDay) return null;
+    const windowDays = content.rules?.linkedAbsenceWindowDays ?? 28;
+    const prevEnd = new Date(linkedLastDay);
+    const newStart = new Date(firstDay);
+    const gapDays = Math.round((newStart - prevEnd) / (1000 * 60 * 60 * 24));
+    const isLinked = gapDays >= 0 && gapDays <= windowDays;
+    const linkType = isLinked ? "within" : "exceeds";
+    const description = isLinked
+      ? "treated as one continuous period"
+      : "treated as separate periods";
+    return `The gap between the previous sickness and this one is ${gapDays} day${gapDays !== 1 ? 's' : ''}, which ${linkType} the ${windowDays}-day legal window – they are ${description}.`;
+  }, [content, linkedFirstDay, linkedLastDay, firstDay]);
+
+  useEffect(() => {
+    if (
+      estimate &&
+      name.trim() &&
+      email.trim() &&
+      company.trim() &&
+      industry.trim() &&
+      status.trim() &&
+      Number(salary) > 0 &&
+      firstDay.trim()
+    ) {
+      setReport({
+        name: name.trim(),
+        email: email.trim(),
+        company: company.trim(),
+        industry: industry.trim(),
+        status: status.trim(),
+        salary: Number(salary),
+        firstDay: firstDay.trim(),
+        lastDay: lastDay.trim(),
+        linked: linkedAbsenceFlag,
+        linkedFirstDay: linkedAbsenceFlag ? linkedFirstDay.trim() : "",
+        linkedLastDay: linkedAbsenceFlag ? linkedLastDay.trim() : "",
+        estimate,
+        generatedDate: new Date().toISOString(),
+      });
+    } else {
+      clearReport();
+    }
+  }, [
+    estimate,
+    name,
+    email,
+    company,
+    industry,
+    status,
+    salary,
+    firstDay,
+    lastDay,
     linkedAbsenceFlag,
+    linkedFirstDay,
+    linkedLastDay,
+    setReport,
+    clearReport,
   ]);
 
   const form = {
+    name,
+    setName,
+    email,
+    setEmail,
+    company,
+    setCompany,
+    industry,
+    setIndustry,
     status,
     setStatus,
     linked,
@@ -103,8 +182,6 @@ export function CalculatePage() {
     setLinkedLastDay,
     salary,
     setSalary,
-    hours,
-    setHours,
     firstDay,
     setFirstDay,
     lastDay,
@@ -135,10 +212,13 @@ export function CalculatePage() {
               className="grid gap-8 rounded-2xl border border-border bg-card p-5 sm:p-8 lg:grid-cols-[1.35fr_1fr] lg:gap-10"
               style={{ boxShadow: "var(--shadow-card)" }}
             >
-              <CalculatorForm content={content} form={form} />
-              <ResultSummary content={content} estimate={estimate} />
+              <CalculatorForm content={content} form={form} estimate={estimate} />
+              <ResultSummary content={content} estimate={estimate} linkNote={linkNote} />
             </div>
           </section>
+
+          <CalculationInformatics content={content} />
+
 
           <HowItWorks content={content} />
         </main>

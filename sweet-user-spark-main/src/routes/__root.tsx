@@ -7,12 +7,18 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { ReportProvider, useReport } from "@/context/ReportContext";
+import { NoReportDialog } from "@/components/report/NoReportDialog";
+import { ReportDialog } from "@/components/report/ReportDialog";
+import { Button } from "@/components/ui/button";
+import { FileText } from "lucide-react";
 
 function NotFoundComponent() {
   return (
@@ -141,29 +147,84 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full bg-background text-foreground">
-          <AppSidebar />
-          <div className="flex min-w-0 flex-1 flex-col">
-            <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/70 bg-background/80 px-4 backdrop-blur">
-              <SidebarTrigger className="-ml-1" />
-              <div className="hidden text-xs font-mono uppercase tracking-[0.14em] text-muted-foreground sm:block">
-                Dutch Civil Code · Art. 7:629
-              </div>
-              <div className="ml-auto">
-                <a
-                  href="mailto:hello@recura.nl"
-                  className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
-                >
-                  Get full report
-                </a>
-              </div>
-            </header>
-            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-            <Outlet />
+      <ReportProvider>
+        <SidebarProvider>
+          <div className="flex min-h-screen w-full bg-background text-foreground">
+            <AppSidebar />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/70 bg-background/80 px-4 backdrop-blur">
+                <SidebarTrigger className="-ml-1" />
+                <div className="hidden text-xs font-mono uppercase tracking-[0.14em] text-muted-foreground sm:block">
+                  Dutch Civil Code · Art. 7:629
+                </div>
+                <div className="ml-auto">
+                  <ReportButton />
+                </div>
+              </header>
+              {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+              <Outlet />
+            </div>
           </div>
-        </div>
-      </SidebarProvider>
+        </SidebarProvider>
+      </ReportProvider>
     </QueryClientProvider>
+  );
+}
+
+function ReportButton() {
+  const { report, hasReport } = useReport();
+  const navigate = useNavigate();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+
+  const handleClick = () => {
+    setDialogOpen(true);
+    if (hasReport) {
+      setShowReportDialog(true);
+    } else {
+      setShowReportDialog(false);
+    }
+  };
+
+  const handleClose = () => {
+    setDialogOpen(false);
+    setShowReportDialog(false);
+  };
+
+  const handleGoToCalculator = () => {
+    handleClose();
+    // Navigate to the calculator page and pass a state flag to scroll to the calculator section
+    navigate({
+      to: '/calculator',
+      state: { scrollToCalculator: true },
+    });
+  };
+
+  return (
+    <>
+      <Button
+        onClick={handleClick}
+        className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 gap-2"
+      >
+        <FileText className="h-4 w-4" />
+        Get full report
+      </Button>
+
+      {dialogOpen && !showReportDialog && (
+        <NoReportDialog
+          open={dialogOpen}
+          onClose={handleClose}
+          onGoToCalculator={handleGoToCalculator}
+        />
+      )}
+
+      {dialogOpen && showReportDialog && report && (
+        <ReportDialog
+          open={dialogOpen}
+          onClose={handleClose}
+          report={report}
+        />
+      )}
+    </>
   );
 }
