@@ -24,6 +24,13 @@ export const CALCULATE_ENDPOINT = buildEndpoint();
 /**
  * Shapes the payload sent to the backend. Kept separate from the fetch call
  * so it's easy to unit test / log without hitting the network.
+ *
+ * IMPORTANT: the `estimate` object here must include every field that
+ * recura_handle_calculate_entitlement() reads on the PHP side, or the
+ * emailed summary will silently fall back to PHP's defaults and no longer
+ * match what the on-screen report shows. PHP currently reads:
+ *   maxWeeks, weeksElapsed, weeksRemaining, effectiveLinked, absenceWeeks,
+ *   year1Weeks, currentYear, year2Monthly, totalOverMaxTerm, waitingDays
  */
 export function buildEntitlementPayload({ form, estimate }) {
     const {
@@ -54,15 +61,28 @@ export function buildEntitlementPayload({ form, estimate }) {
         linkedLastDay: linked ? linkedLastDay || "" : "",
         estimate: estimate
             ? {
+                // Payment figures
                 currentMonthly: estimate.currentMonthly,
                 currentPercent: estimate.currentPercent,
                 currentYear: estimate.currentYear,
                 year1Monthly: estimate.year1Monthly,
                 year2Monthly: estimate.year2Monthly,
                 totalOverMaxTerm: estimate.totalOverMaxTerm,
-                weeksRemaining: estimate.weeksRemaining,
+
+                // Timeline fields - these were previously missing, which is
+                // why the emailed "Previous/Current sickness period" and
+                // "Previous sickness linked" rows didn't match the report.
                 maxWeeks: estimate.maxWeeks,
+                weeksElapsed: estimate.weeksElapsed,
+                weeksRemaining: estimate.weeksRemaining,
+                year1Weeks: estimate.year1Weeks,
+                effectiveLinked: estimate.effectiveLinked,
+                absenceWeeks: estimate.absenceWeeks,
+
+                // Rules
                 waitingDays: estimate.waitingDays,
+                minWageMonthly: estimate.minWageMonthly,
+                belowMinWage: estimate.belowMinWage,
             }
             : null,
     };
@@ -76,7 +96,7 @@ export async function sendEntitlementEmail(payload) {
     const endpoint = CALCULATE_ENDPOINT;
     if (!endpoint) {
         throw new Error(
-            "Missing VITE_WP_API_URL — cannot reach the WordPress API to send the email.",
+            "Missing VITE_WP_API_URL - cannot reach the WordPress API to send the email.",
         );
     }
 
@@ -88,14 +108,14 @@ export async function sendEntitlementEmail(payload) {
             body: JSON.stringify(payload),
         });
     } catch (networkErr) {
-        throw new Error("Network error — could not reach the server.");
+        throw new Error("Network error - could not reach the server.");
     }
 
     let data = null;
     try {
         data = await response.json();
     } catch (_) {
-        // response had no / invalid JSON body — fall through to status check
+        // response had no / invalid JSON body - fall through to status check
     }
 
     if (!response.ok) {

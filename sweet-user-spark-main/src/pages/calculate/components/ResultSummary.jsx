@@ -1,5 +1,5 @@
 /**
- * ResultSummary.jsx — Calculate page
+ * ResultSummary.jsx - Calculate page
  */
 import { ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -46,10 +46,10 @@ export function ResultSummary({ content, estimate, linkNote }) {
   const rules = content.rules || {};
 
   const formatCurrency = (value) =>
-    value != null ? `€ ${value.toLocaleString("en")}` : "—";
+    value != null ? `EUR ${value.toLocaleString("en")}` : "-";
 
   const formatWeeks = (value) =>
-    value != null ? `${value} week${value !== 1 ? "s" : ""}` : "—";
+    value != null ? `${value} week${value !== 1 ? "s" : ""}` : "-";
 
   // Main amount
   const mainAmount = estimate?.currentMonthly ?? estimate?.year1Monthly;
@@ -58,7 +58,7 @@ export function ResultSummary({ content, estimate, linkNote }) {
   const percent = estimate?.currentPercent ?? rules.year1Percent;
   let subtitle = percent != null ? `Based on ${percent}% of your gross salary` : "";
   if (estimate?.wageCapApplied && estimate?.wageCapMonthly) {
-    subtitle += ` (capped at €${estimate.wageCapMonthly.toLocaleString("en")}/month)`;
+    subtitle += ` (capped at EUR ${estimate.wageCapMonthly.toLocaleString("en")}/month)`;
   }
 
   // Entitlement breakdown
@@ -88,17 +88,18 @@ export function ResultSummary({ content, estimate, linkNote }) {
       ? estimate.waitingDays === 0
         ? "No waiting days"
         : `${estimate.waitingDays} waiting day${estimate.waitingDays !== 1 ? "s" : ""}`
-      : "—";
+      : "-";
 
   const linkedValue =
     effectiveLinked != null
       ? effectiveLinked
-        ? "Yes – included in calculation"
+        ? "Yes - included in calculation"
         : "No"
-      : "—";
+      : "-";
 
   const footerText =
-    result.footnote || "Based on Article 7:629 of the Dutch Civil Code. CAO agreements may provide higher benefits.";
+    result.footnote ||
+    "Based on Article 7:629 of the Dutch Civil Code. CAO agreements may provide higher benefits.";
 
   return (
     <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start">
@@ -111,7 +112,7 @@ export function ResultSummary({ content, estimate, linkNote }) {
         </p>
 
         <p className="mt-4 font-serif text-4xl leading-tight">
-          {mainAmount != null ? `€ ${mainAmount.toLocaleString("en")}` : result.emptyAmount || "—"}
+          {mainAmount != null ? `EUR ${mainAmount.toLocaleString("en")}` : result.emptyAmount || "-"}
           <span className="text-lg text-primary-foreground/60"> /month</span>
         </p>
         {subtitle && <p className="mt-1 text-sm text-primary-foreground/70">{subtitle}</p>}
@@ -140,7 +141,7 @@ export function ResultSummary({ content, estimate, linkNote }) {
           {estimate?.currentYear != null && (
             <StatRow label="Current payment period">
               {estimate.currentYear === 1
-                ? `Year 1 (weeks 1–${estimate.year1Weeks ?? 52})`
+                ? `Year 1 (weeks 1-${estimate.year1Weeks ?? 52})`
                 : `Year 2 (after ${estimate.year1Weeks ?? 52} weeks)`}
             </StatRow>
           )}
@@ -155,24 +156,31 @@ export function ResultSummary({ content, estimate, linkNote }) {
           {linkNote && <div className="mt-1 text-xs text-primary-foreground/70 leading-relaxed">{linkNote}</div>}
         </div>
 
-        {/* Warning */}
+        {/* Minimum-wage validation warning - now driven by the actual
+            comparison result (estimate.belowMinWage), not just whether
+            rules.min_wage_monthly happens to have a value. */}
         {estimate?.belowMinWage && (
           <div className="mt-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-            <p className="font-medium">⚠️ Your calculated sick pay may require review because it is below the minimum wage threshold.</p>
+            <p className="font-medium">
+              Warning: your gross monthly salary is below the legal minimum wage of{" "}
+              {formatCurrency(estimate?.minWageMonthly)}. Please review your entry.
+            </p>
           </div>
         )}
 
         <p className="mt-6 text-xs leading-relaxed text-primary-foreground/60">{footerText}</p>
       </div>
 
-      {/* Policy CTA – safe fallback */}
+      {/* Policy CTA - safe fallback */}
       <PolicyLink
         href={cta.link || "#"}
         className="mt-4 flex items-center justify-between rounded-xl border border-border bg-background p-4 text-sm transition-colors hover:border-accent hover:bg-accent/5"
       >
         <div>
           <p className="font-medium text-foreground">{cta.title || "Policy Analyser"}</p>
-          <p className="text-xs text-muted-foreground">{cta.description || "See how your CAO affects your sick pay."}</p>
+          <p className="text-xs text-muted-foreground">
+            {cta.description || "See how your CAO affects your sick pay."}
+          </p>
         </div>
         <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
       </PolicyLink>

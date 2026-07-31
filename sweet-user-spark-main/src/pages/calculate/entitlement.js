@@ -1,8 +1,12 @@
 /**
- * entitlement.js — corrected version
- * 
+ * entitlement.js - corrected version
+ *
  * Changes:
- * - Applies minimum-wage top‑up to both year1 and year2 monthly payments.
+ * - Applies minimum-wage top-up to both year1 and year2 monthly payments.
+ * - belowMinWage now compares the RAW gross monthly salary directly against
+ *   the exact rules.min_wage_monthly ACF value - no percentage or other
+ *   calculation involved. gross >= minWageMonthly -> no warning.
+ *   gross < minWageMonthly -> warning.
  * - Subtracts waiting days from the absence total (only for new sickness periods;
  *   linked absences inherit the waiting period from the previous sickness).
  * - Keeps all original date/week calculations.
@@ -57,7 +61,7 @@ export function isLinkedAbsence(previousLastDayIso, newFirstDayIso, rules) {
   const next = parseDate(newFirstDayIso);
   if (!prev || !next) return false;
   const gapDays = (startOfDay(next).getTime() - startOfDay(prev).getTime()) / MS_PER_DAY;
-  const allowed = Number(rules.linkedAbsenceWindowDays) || 28;
+  const allowed = Number(rules.linked_absence_days) || 28;
   return gapDays >= 0 && gapDays <= allowed;
 }
 
@@ -77,9 +81,9 @@ export function calculateEntitlement(input, rules) {
   let year1Monthly = Math.round(gross * (year1Pct / 100));
   let year2Monthly = Math.round(gross * (year2Pct / 100));
 
-  // ---- 2. Apply minimum‑wage top‑up ----
+  // ---- 2. Apply minimum-wage top-up ----
   // The law says: payment = max(70% of salary, minimum wage)
-  // We assume full‑time; for part‑time, the minimum wage is proportional,
+  // We assume full-time; for part-time, the minimum wage is proportional,
   // but we don't have hours, so this is a reasonable estimate.
   if (minWageMonthly > 0) {
     year1Monthly = Math.max(year1Monthly, minWageMonthly);
@@ -127,20 +131,19 @@ export function calculateEntitlement(input, rules) {
     absenceWeeks = weeksBetween(input.firstDay, input.lastDay);
   }
 
-  // ---- 8. Total payment for this absence (with waiting‑day deduction) ----
+  // ---- 8. Total payment for this absence (with waiting-day deduction) ----
   let absenceTotal = null;
   if (absenceWeeks !== null) {
     // Daily rate: monthly * 12 / 52 / 7
-    const dailyRate = currentMonthly * 12 / 52 / 7;
-    // Number of payable days = total days in absence minus waiting days
-    // We approximate days = absenceWeeks * 7, but we should use exact days.
-    // Better: compute days directly from date diff.
+    const dailyRate = (currentMonthly * 12) / 52 / 7;
+
     let totalDays = 0;
     if (input.firstDay && input.lastDay) {
       const from = parseDate(input.firstDay);
       const to = parseDate(input.lastDay);
       if (from && to) {
-        totalDays = Math.floor((startOfDay(to).getTime() - startOfDay(from).getTime()) / MS_PER_DAY) + 1; // inclusive
+        totalDays =
+          Math.floor((startOfDay(to).getTime() - startOfDay(from).getTime()) / MS_PER_DAY) + 1; // inclusive
       }
     }
     // Waiting days apply only if this is a new sickness (not linked)
@@ -149,12 +152,12 @@ export function calculateEntitlement(input, rules) {
     absenceTotal = Math.round(payableDays * dailyRate);
   }
 
-  // ---- 9. Total possible payment over the full 104 weeks (with top‑up) ----
+  // ---- 9. Total possible payment over the full term (with top-up) ----
   const totalOverMaxTerm = year1Monthly * 12 + year2Monthly * 12;
 
   // ---- 10. Return result ----
   return {
-    // Monthly payments (after top‑up)
+    // Monthly payments (after top-up)
     year1Monthly,
     year2Monthly,
     currentMonthly,
@@ -168,7 +171,7 @@ export function calculateEntitlement(input, rules) {
     // Payment totals
     totalOverMaxTerm,
     absenceWeeks,
-    absenceTotal,        // corrected for waiting days
+    absenceTotal, // corrected for waiting days
 
     // Timeline
     weeksElapsed,
@@ -178,9 +181,15 @@ export function calculateEntitlement(input, rules) {
 
     // Rules
     waitingDays,
-    minWageMonthly,
-    // We can also return the raw flag to show if top‑up was applied
-    belowMinWage: (gross * year1Pct / 100) < minWageMonthly,
+    minWageMonthly, // exact ACF value, exposed as-is for display
+
+    // Minimum-wage validation:
+    // Direct comparison of the RAW gross monthly salary entered by the
+    // user against the exact rules.min_wage_monthly value. No percentage,
+    // no rounding, no other calculation.
+    //   gross >= minWageMonthly  -> false (no warning)
+    //   gross <  minWageMonthly  -> true  (show warning)
+    belowMinWage: minWageMonthly > 0 && gross < minWageMonthly,
 
     // Dates
     clockStart,
