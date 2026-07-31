@@ -24,7 +24,7 @@ import {
 const primary = [
   { title: "Calculator", url: "/", icon: Calculator },
   { title: "Eligibility", url: "/eligibility", icon: ShieldCheck },
-  { title: "Policy analyser", url: "/policy-analyser", icon: FileSearch },
+  //{ title: "Policy analyser", url: "/policy-analyser", icon: FileSearch },
 ];
 
 const secondary = [

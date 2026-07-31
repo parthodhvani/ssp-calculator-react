@@ -10,7 +10,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         const paths = [
           "/",
           "/eligibility",
-          "/policy-analyser",
+          //"/policy-analyser",
           "/rules",
           "/blog",
           "/contact",
