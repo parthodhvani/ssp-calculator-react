@@ -23,11 +23,11 @@ const primary = [
     url: "/eligibility",
     icon: ShieldCheck,
   },
-  {
-    title: "Policy analyser",
-    url: "/policy-analyser",
-    icon: FileSearch,
-  },
+  // {
+  //   title: "Policy analyser",
+  //   url: "/policy-analyser",
+  //   icon: FileSearch,
+  // },
 ];
 const secondary = [
   {

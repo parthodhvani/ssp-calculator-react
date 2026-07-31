@@ -68,7 +68,6 @@ export function mapAcfResponseToContent(acf) {
   const sectionG = group(acf, "section");
   const formG = group(acf, "form");
   const salaryG = group(acf, "salary");
-  const hoursG = group(acf, "hours");
   const rulesG = group(acf, "rules");
   const resultG = group(acf, "result");
   const howSecG = group(acf, "how_it_works_section");
@@ -183,10 +182,8 @@ export function mapAcfResponseToContent(acf) {
   const hasForm =
     formG ||
     salaryG ||
-    hoursG ||
     acf.form_name_label ||
     acf.salary_label ||
-    acf.hours_label ||
     acf.calculator_salary_label ||
     acf.form_submit_label ||
     acf.calculator_submit_label;
@@ -310,35 +307,6 @@ export function mapAcfResponseToContent(acf) {
         0,
       ),
 
-      hoursLabel: str(
-        first(acf.hours_label, hoursG?.label, acf.calculator_hours_label),
-        "",
-      ),
-      hoursPlaceholder: str(
-        first(
-          acf.hours_placeholder,
-          hoursG?.placeholder,
-          acf.calculator_hours_placeholder,
-        ),
-        "",
-      ),
-      hoursDefault: str(
-        first(acf.hours_default, hoursG?.default_value, acf.calculator_hours_default),
-        "",
-      ),
-      hoursMin: num(
-        first(acf.hours_min, hoursG?.min, acf.calculator_hours_min),
-        0,
-      ),
-      hoursMax: num(
-        first(acf.hours_max, hoursG?.max, acf.calculator_hours_max),
-        0,
-      ),
-      hoursStep: num(
-        first(acf.hours_step, hoursG?.step, acf.calculator_hours_step),
-        0,
-      ),
-
       firstDayLabel: str(
         first(
           acf.form_first_day_label,
@@ -443,10 +411,6 @@ export function mapAcfResponseToContent(acf) {
         first(rulesG?.linked_absence_days, acf.rules_linked_absence_days),
         0,
       ),
-      fullTimeHours: num(
-        first(rulesG?.full_time_hours, acf.rules_full_time_hours),
-        0,
-      ),
     };
   }
 
@@ -493,10 +457,6 @@ export function mapAcfResponseToContent(acf) {
       ),
       linkedAbsenceLabel: str(
         first(resultG?.linked_absence_label, acf.result_linked_absence_label),
-        "",
-      ),
-      hoursAdjustedLabel: str(
-        first(resultG?.hours_adjusted_label, acf.result_hours_adjusted_label),
         "",
       ),
       footnote: str(first(resultG?.footnote, acf.result_footnote), ""),
@@ -610,12 +570,6 @@ function finalizeContent(mapped) {
       salaryMin: 0,
       salaryMax: 0,
       salaryStep: 0,
-      hoursLabel: "",
-      hoursPlaceholder: "",
-      hoursDefault: "",
-      hoursMin: 0,
-      hoursMax: 0,
-      hoursStep: 0,
       firstDayLabel: "",
       firstDayHint: "",
       lastDayLabel: "",
@@ -634,7 +588,6 @@ function finalizeContent(mapped) {
       waitingDays: 0,
       minWageMonthly: 0,
       linkedAbsenceWindowDays: 0,
-      fullTimeHours: 0,
     },
     result: mapped.result ?? {
       kicker: "",
@@ -649,7 +602,6 @@ function finalizeContent(mapped) {
       waitingDaysLabel: "",
       waitingDaysValue: "",
       linkedAbsenceLabel: "",
-      hoursAdjustedLabel: "",
       footnote: "",
     },
     howItWorksSection: mapped.howItWorksSection ?? { kicker: "", title: "" },
