@@ -165,7 +165,7 @@ export function CalculationInformatics({ content }) {
     // Use ACF data if present, otherwise fallback to defaults
     const displaySteps = steps.length > 0 ? steps : defaultSteps;
     const displayFaqs = faqs.length > 0 ? faqs : defaultFaqs;
-    const displayFooter = footerText || "This estimate is based on Article 7:629 of the Dutch Civil Code. Your CAO may offer better terms. This is not legal advice.";
+    const displayFooter = footerText || "This estimate is based on statutory sick-pay rules. Your CAO may offer better terms. This is not legal advice.";
 
     return (
         <section id="how-we-calculate" className="mx-auto max-w-6xl px-6 py-16">

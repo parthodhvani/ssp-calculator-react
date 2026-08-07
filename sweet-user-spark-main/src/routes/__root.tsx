@@ -155,7 +155,7 @@ function RootComponent() {
               <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/70 bg-background/80 px-4 backdrop-blur">
                 <SidebarTrigger className="-ml-1" />
                 <div className="hidden text-xs font-mono uppercase tracking-[0.14em] text-muted-foreground sm:block">
-                  Dutch Civil Code · Art. 7:629
+                  Reference · Statutory Sick-Pay Law
                 </div>
                 <div className="ml-auto">
                   <ReportButton />
