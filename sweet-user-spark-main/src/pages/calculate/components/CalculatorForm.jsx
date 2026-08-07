@@ -14,12 +14,15 @@
  * Gross monthly salary, First day of sick leave.
  * Last day + linked-absence fields remain optional.
  *
- * On submit: validates all required fields above, then shows a confirmation
- * popup asking permission to email the results (to the visitor AND the site
- * admin) before anything is sent.
+ * Nothing is calculated live as the person types anymore. On submit:
+ * validates all required fields above, then shows a confirmation popup
+ * asking permission to email the results (to the visitor AND the site
+ * admin). The entitlement numbers themselves stay hidden in ResultSummary
+ * until that email actually sends successfully — see onEmailSent below,
+ * which is how the parent (CalculatePage) knows it's safe to reveal them.
  */
 import { useState, useEffect } from "react";
-import { CalendarDays, Info, ArrowRight, Mail, X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { CalendarDays, Info, ArrowRight, Mail, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -34,10 +37,11 @@ import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/shared/FormField";
 import { formatTemplate, resolveHref } from "../content";
 import { buildEntitlementPayload, sendEntitlementEmail } from "../submitCalculation";
+import { InfoDialog } from "./InfoDialog";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function CalculatorForm({ content, form, estimate }) {
+export function CalculatorForm({ content, form, estimate, onEmailSent }) {
   const {
     name,
     setName,
@@ -171,7 +175,10 @@ export function CalculatorForm({ content, form, estimate }) {
       });
       await sendEntitlementEmail(payload);
       setSendState("success");
-      setSendMessage("Sent! Check your inbox for a copy of your results.");
+      setSendMessage("Sent! Check your inbox — and take a look below, your results are now unlocked.");
+      // Only now is it safe to reveal the numbers in ResultSummary and to
+      // make the full report available — tell the parent the email went out.
+      onEmailSent?.();
     } catch (err) {
       setSendState("error");
       setSendMessage(err?.message || "Something went wrong sending the email.");
@@ -418,90 +425,70 @@ export function CalculatorForm({ content, form, estimate }) {
         </div>
       )}
 
-      {showConfirm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="send-confirm-title"
-        >
-          <div
-            className="w-full max-w-md rounded-2xl border border-border bg-card p-6 text-foreground"
-            style={{ boxShadow: "var(--shadow-elegant, 0 20px 40px rgba(0,0,0,0.2))" }}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <h3 id="send-confirm-title" className="font-serif text-xl text-foreground">
-                Email your entitlement estimate?
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowConfirm(false)}
-                className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                aria-label="Close"
-              >
-                <X className="h-4 w-4" />
-              </button>
+      <InfoDialog
+        open={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        titleId="send-confirm-title"
+        title="Email your entitlement estimate?"
+      >
+        {sendState === "idle" && (
+          <>
+            <p className="mt-3 text-sm text-muted-foreground">
+              We'll send a copy of this estimate to{" "}
+              <span className="font-medium text-foreground">{email}</span> and to
+              our team, so we can follow up if you'd like help. Your detailed
+              numbers below — and your full report — unlock as soon as this
+              email is sent. Do we have your permission to send it?
+            </p>
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <Button type="button" variant="outline" onClick={handleCancelConfirm}>
+                No, don't send
+              </Button>
+              <Button type="button" onClick={handleConfirmSend} className="gap-2">
+                Yes, send it
+              </Button>
             </div>
+          </>
+        )}
 
-            {sendState === "idle" && (
-              <>
-                <p className="mt-3 text-sm text-muted-foreground">
-                  We'll send a copy of this estimate to{" "}
-                  <span className="font-medium text-foreground">{email}</span> and to
-                  our team, so we can follow up if you'd like help. Do we have your
-                  permission to send these emails?
-                </p>
-                <div className="mt-6 flex flex-wrap justify-end gap-3">
-                  <Button type="button" variant="outline" onClick={handleCancelConfirm}>
-                    No, don't send
-                  </Button>
-                  <Button type="button" onClick={handleConfirmSend} className="gap-2">
-                    Yes, send it
-                  </Button>
-                </div>
-              </>
-            )}
-
-            {sendState === "sending" && (
-              <div className="mt-6 flex items-center gap-3 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Sending your results…
-              </div>
-            )}
-
-            {sendState === "success" && (
-              <div className="mt-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                  <CheckCircle2 className="h-5 w-5 text-accent" />
-                  {sendMessage}
-                </div>
-                <div className="mt-6 flex justify-end">
-                  <Button type="button" onClick={handleCloseAfterSend}>
-                    Done
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {sendState === "error" && (
-              <div className="mt-4">
-                <div className="flex items-start gap-2 text-sm font-medium text-destructive">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  {sendMessage}
-                </div>
-                <div className="mt-6 flex flex-wrap justify-end gap-3">
-                  <Button type="button" variant="outline" onClick={handleCloseAfterSend}>
-                    Skip
-                  </Button>
-                  <Button type="button" onClick={handleConfirmSend}>
-                    Try again
-                  </Button>
-                </div>
-              </div>
-            )}
+        {sendState === "sending" && (
+          <div className="mt-6 flex items-center gap-3 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Sending your results…
           </div>
-        </div>
-      )}
+        )}
+
+        {sendState === "success" && (
+          <div className="mt-4">
+            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <CheckCircle2 className="h-5 w-5 text-accent" />
+              {sendMessage}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <Button type="button" onClick={handleCloseAfterSend}>
+                Done
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {sendState === "error" && (
+          <div className="mt-4">
+            <div className="flex items-start gap-2 text-sm font-medium text-destructive">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              {sendMessage}
+            </div>
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <Button type="button" variant="outline" onClick={handleCloseAfterSend}>
+                Skip
+              </Button>
+              <Button type="button" onClick={handleConfirmSend}>
+                Try again
+              </Button>
+            </div>
+          </div>
+        )}
+      </InfoDialog>
     </form>
   );
 }

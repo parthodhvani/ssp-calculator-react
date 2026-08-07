@@ -80,6 +80,10 @@ export function CalculatePage() {
     return isLinkedAbsence(linkedLastDay, firstDay, content.rules);
   }, [content, linkedLastDay, firstDay, linkedFirstDay]);
 
+  // This still recalculates as the person types — but that's fine, because
+  // it's only ever used internally (to build the email payload when they
+  // submit, and to snapshot into resultSnapshot once that email actually
+  // sends). It is never rendered directly anymore; see resultSnapshot below.
   const estimate = useMemo(() => {
     if (!content) return null;
     return calculateEntitlement(
@@ -117,51 +121,85 @@ export function CalculatePage() {
     return `The gap between the previous sickness and this one is ${gapDays} day${gapDays !== 1 ? 's' : ''}, which ${linkType} the ${windowDays}-day legal window – they are ${description}.`;
   }, [content, linkedFirstDay, linkedLastDay, firstDay]);
 
-  useEffect(() => {
-    if (
-      estimate &&
-      name.trim() &&
-      email.trim() &&
-      company.trim() &&
-      industry.trim() &&
-      status.trim() &&
-      Number(salary) > 0 &&
-      firstDay.trim()
-    ) {
-      setReport({
+  // ---------------------------------------------------------------------
+  // Reveal gating
+  // ---------------------------------------------------------------------
+  // resultSnapshot is the ONLY thing ResultSummary is allowed to display,
+  // and it is only ever written once: right after the entitlement email is
+  // confirmed sent (see handleEstimateEmailed, passed to CalculatorForm as
+  // onEmailSent). Nothing here recalculates live in front of the person —
+  // editing any field after a snapshot exists just marks it stale below,
+  // which locks the panel again until they resubmit + reconfirm the email.
+  const [resultSnapshot, setResultSnapshot] = useState(null);
+
+  const formSnapshotKey = useMemo(
+    () =>
+      JSON.stringify({
         name: name.trim(),
         email: email.trim(),
         company: company.trim(),
         industry: industry.trim(),
         status: status.trim(),
-        salary: Number(salary),
+        salary: Number(salary) || 0,
         firstDay: firstDay.trim(),
         lastDay: lastDay.trim(),
-        linked: linkedAbsenceFlag,
-        linkedFirstDay: linkedAbsenceFlag ? linkedFirstDay.trim() : "",
-        linkedLastDay: linkedAbsenceFlag ? linkedLastDay.trim() : "",
-        estimate,
-        generatedDate: new Date().toISOString(),
-      });
-    } else {
+        linked,
+        linkedFirstDay: linkedFirstDay.trim(),
+        linkedLastDay: linkedLastDay.trim(),
+      }),
+    [
+      name,
+      email,
+      company,
+      industry,
+      status,
+      salary,
+      firstDay,
+      lastDay,
+      linked,
+      linkedFirstDay,
+      linkedLastDay,
+    ],
+  );
+
+  const isResultStale = Boolean(resultSnapshot) && resultSnapshot.key !== formSnapshotKey;
+  const resultUnlocked = Boolean(resultSnapshot) && !isResultStale;
+
+  // If the person edits anything after unlocking, the snapshot no longer
+  // matches what's in the form, so drop it (and clear the report the "Full
+  // report" button reads) until they submit + confirm the email again.
+  useEffect(() => {
+    if (isResultStale) {
+      setResultSnapshot(null);
       clearReport();
     }
-  }, [
-    estimate,
-    name,
-    email,
-    company,
-    industry,
-    status,
-    salary,
-    firstDay,
-    lastDay,
-    linkedAbsenceFlag,
-    linkedFirstDay,
-    linkedLastDay,
-    setReport,
-    clearReport,
-  ]);
+  }, [isResultStale, clearReport]);
+
+  // Passed to CalculatorForm as onEmailSent — called only after
+  // sendEntitlementEmail() resolves successfully.
+  function handleEstimateEmailed() {
+    if (!estimate) return;
+    setResultSnapshot({
+      key: formSnapshotKey,
+      estimate,
+      linkNote,
+    });
+    setReport({
+      name: name.trim(),
+      email: email.trim(),
+      company: company.trim(),
+      industry: industry.trim(),
+      status: status.trim(),
+      salary: Number(salary),
+      firstDay: firstDay.trim(),
+      lastDay: lastDay.trim(),
+      linked: linkedAbsenceFlag,
+      linkedFirstDay: linkedAbsenceFlag ? linkedFirstDay.trim() : "",
+      linkedLastDay: linkedAbsenceFlag ? linkedLastDay.trim() : "",
+      estimate,
+      generatedDate: new Date().toISOString(),
+    });
+  }
 
   const form = {
     name,
@@ -212,8 +250,18 @@ export function CalculatePage() {
               className="grid gap-8 rounded-2xl border border-border bg-card p-5 sm:p-8 lg:grid-cols-[1.35fr_1fr] lg:gap-10"
               style={{ boxShadow: "var(--shadow-card)" }}
             >
-              <CalculatorForm content={content} form={form} estimate={estimate} />
-              <ResultSummary content={content} estimate={estimate} linkNote={linkNote} />
+              <CalculatorForm
+                content={content}
+                form={form}
+                estimate={estimate}
+                onEmailSent={handleEstimateEmailed}
+              />
+              <ResultSummary
+                content={content}
+                estimate={resultUnlocked ? resultSnapshot.estimate : null}
+                linkNote={resultUnlocked ? resultSnapshot.linkNote : null}
+                unlocked={resultUnlocked}
+              />
             </div>
           </section>
 
