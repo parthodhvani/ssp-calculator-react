@@ -37,7 +37,6 @@ import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/shared/FormField";
 import { formatTemplate, resolveHref } from "../content";
 import { buildEntitlementPayload, sendEntitlementEmail } from "../submitCalculation";
-import { InfoDialog } from "./InfoDialog";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -84,7 +83,6 @@ export function CalculatorForm({ content, form, estimate, onEmailSent }) {
   });
 
   const [errors, setErrors] = useState({});
-  const [showConfirm, setShowConfirm] = useState(false);
   const [sendState, setSendState] = useState("idle"); // idle | sending | success | error
   const [sendMessage, setSendMessage] = useState("");
 
@@ -123,37 +121,22 @@ export function CalculatorForm({ content, form, estimate, onEmailSent }) {
     } else if (!EMAIL_RE.test(email.trim())) {
       nextErrors.email = "Please enter a valid email address.";
     }
-    if (!industry || !industry.trim()) {
-      nextErrors.industry = "Please select your industry / sector.";
-    }
-    // Status is now hidden and automatically set – we no longer validate it.
-    if (!salary || Number(salary) <= 0) {
-      nextErrors.salary = "Please enter your gross monthly salary.";
-    }
-    if (!firstDay || !firstDay.trim()) {
-      nextErrors.firstDay = "Please enter the first day of sick leave.";
-    }
+    // Industry, status, salary, and first day of sick leave are no longer
+    // validated — only name, company, and email are required now.
 
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
 
-  function handleSubmit(e) {
+  // Submitting the form now goes straight to sending the email and
+  // calculating/revealing the results — no confirmation popup in between.
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!validate()) return;
-    setSendState("idle");
-    setSendMessage("");
-    setShowConfirm(true);
+    await sendAndReveal();
   }
 
-  function handleCancelConfirm() {
-    setShowConfirm(false);
-    // Preserve prior behaviour (scroll / navigate) even if the user opts
-    // out of receiving the email.
-    runOriginalSubmitBehavior();
-  }
-
-  async function handleConfirmSend() {
+  async function sendAndReveal() {
     setSendState("sending");
     setSendMessage("");
     try {
@@ -175,21 +158,15 @@ export function CalculatorForm({ content, form, estimate, onEmailSent }) {
       });
       await sendEntitlementEmail(payload);
       setSendState("success");
-      setSendMessage("Sent! Check your inbox — and take a look below, your results are now unlocked.");
+      setSendMessage("Sent! Check your inbox — your results are now unlocked below.");
       // Only now is it safe to reveal the numbers in ResultSummary and to
       // make the full report available — tell the parent the email went out.
       onEmailSent?.();
+      runOriginalSubmitBehavior();
     } catch (err) {
       setSendState("error");
       setSendMessage(err?.message || "Something went wrong sending the email.");
     }
-  }
-
-  function handleCloseAfterSend() {
-    setShowConfirm(false);
-    setSendState("idle");
-    setSendMessage("");
-    runOriginalSubmitBehavior();
   }
 
   return (
@@ -243,7 +220,7 @@ export function CalculatorForm({ content, form, estimate, onEmailSent }) {
         </FormField>
 
         <FormField
-          label={`${calc.industryLabel || "Industry / sector"} *`}
+          label={calc.industryLabel || "Industry / sector"}
           hint={calc.industryHint}
           className="sm:col-span-2"
         >
@@ -251,7 +228,7 @@ export function CalculatorForm({ content, form, estimate, onEmailSent }) {
             value={industry || undefined}
             onValueChange={(v) => setIndustry(v)}
           >
-            <SelectTrigger aria-invalid={Boolean(errors.industry)}>
+            <SelectTrigger>
               <SelectValue placeholder={calc.industryPlaceholder} />
             </SelectTrigger>
             <SelectContent>
@@ -262,9 +239,6 @@ export function CalculatorForm({ content, form, estimate, onEmailSent }) {
               ))}
             </SelectContent>
           </Select>
-          {errors.industry && (
-            <p className="mt-1 text-xs font-medium text-destructive">{errors.industry}</p>
-          )}
         </FormField>
 
         {/* Employment Type toggle – kept */}
@@ -301,7 +275,7 @@ export function CalculatorForm({ content, form, estimate, onEmailSent }) {
             {/* Status radio group has been removed entirely */}
 
             <FormField
-              label={`${calc.salaryLabel || "Gross monthly salary (€)"} *`}
+              label={calc.salaryLabel || "Gross monthly salary (€)"}
               className="sm:col-span-2"
             >
               <Input
@@ -313,28 +287,18 @@ export function CalculatorForm({ content, form, estimate, onEmailSent }) {
                 max={calc.salaryMax}
                 step={calc.salaryStep}
                 onChange={(e) => setSalary(e.target.value.replace(/[^\d.]/g, ""))}
-                required
-                aria-invalid={Boolean(errors.salary)}
               />
-              {errors.salary && (
-                <p className="mt-1 text-xs font-medium text-destructive">{errors.salary}</p>
-              )}
             </FormField>
 
-            <FormField label={`${calc.firstDayLabel || "First day of sick leave"} *`} hint={calc.firstDayHint}>
+            <FormField label={calc.firstDayLabel || "First day of sick leave"} hint={calc.firstDayHint}>
               <div className="relative">
                 <Input
                   type="date"
                   value={firstDay}
                   onChange={(e) => setFirstDay(e.target.value)}
-                  required
-                  aria-invalid={Boolean(errors.firstDay)}
                 />
                 <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               </div>
-              {errors.firstDay && (
-                <p className="mt-1 text-xs font-medium text-destructive">{errors.firstDay}</p>
-              )}
             </FormField>
             <FormField label={calc.lastDayLabel}>
               <div className="relative">
@@ -418,77 +382,42 @@ export function CalculatorForm({ content, form, estimate, onEmailSent }) {
             <Info className="h-3.5 w-3.5 shrink-0" />
             {content.disclaimer}
           </p>
-          <Button type="submit" size="lg" className="gap-2">
-            {calc.submitLabel}
-            <ArrowRight className="h-4 w-4" />
+          <Button type="submit" size="lg" className="gap-2" disabled={sendState === "sending"}>
+            {sendState === "sending" ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Calculating…
+              </>
+            ) : (
+              <>
+                {calc.submitLabel}
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
           </Button>
         </div>
       )}
 
-      <InfoDialog
-        open={showConfirm}
-        onClose={() => setShowConfirm(false)}
-        titleId="send-confirm-title"
-        title="Email your entitlement estimate?"
-      >
-        {sendState === "idle" && (
-          <>
-            <p className="mt-3 text-sm text-muted-foreground">
-              We'll send a copy of this estimate to{" "}
-              <span className="font-medium text-foreground">{email}</span> and to
-              our team, so we can follow up if you'd like help. Your detailed
-              numbers below — and your full report — unlock as soon as this
-              email is sent. Do we have your permission to send it?
-            </p>
-            <div className="mt-6 flex flex-wrap justify-end gap-3">
-              <Button type="button" variant="outline" onClick={handleCancelConfirm}>
-                No, don't send
-              </Button>
-              <Button type="button" onClick={handleConfirmSend} className="gap-2">
-                Yes, send it
-              </Button>
-            </div>
-          </>
-        )}
+      {/* Inline send status — replaces the old confirmation popup. No modal
+          is shown; feedback appears right under the form instead. */}
+      {employmentType === "employee" && sendState === "success" && (
+        <div className="mt-4 flex items-center gap-2 text-sm font-medium text-foreground">
+          <CheckCircle2 className="h-5 w-5 text-accent" />
+          {sendMessage}
+        </div>
+      )}
 
-        {sendState === "sending" && (
-          <div className="mt-6 flex items-center gap-3 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Sending your results…
+      {employmentType === "employee" && sendState === "error" && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+          <div className="flex items-start gap-2 text-sm font-medium text-destructive">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            {sendMessage}
           </div>
-        )}
-
-        {sendState === "success" && (
-          <div className="mt-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <CheckCircle2 className="h-5 w-5 text-accent" />
-              {sendMessage}
-            </div>
-            <div className="mt-6 flex justify-end">
-              <Button type="button" onClick={handleCloseAfterSend}>
-                Done
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {sendState === "error" && (
-          <div className="mt-4">
-            <div className="flex items-start gap-2 text-sm font-medium text-destructive">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              {sendMessage}
-            </div>
-            <div className="mt-6 flex flex-wrap justify-end gap-3">
-              <Button type="button" variant="outline" onClick={handleCloseAfterSend}>
-                Skip
-              </Button>
-              <Button type="button" onClick={handleConfirmSend}>
-                Try again
-              </Button>
-            </div>
-          </div>
-        )}
-      </InfoDialog>
+          <Button type="button" size="sm" variant="outline" onClick={sendAndReveal}>
+            Try again
+          </Button>
+        </div>
+      )}
     </form>
   );
 }
