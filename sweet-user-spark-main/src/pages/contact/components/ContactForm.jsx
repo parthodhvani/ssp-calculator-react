@@ -90,7 +90,7 @@ export function ContactForm({
                 autoComplete="name"
                 disabled={submitting}
                 className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none disabled:opacity-60"
-                placeholder="Anna de Vries"
+                placeholder="e.g., Jordan Vance"
               />
             </div>
             <div>
@@ -104,7 +104,7 @@ export function ContactForm({
                 autoComplete="email"
                 disabled={submitting}
                 className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none disabled:opacity-60"
-                placeholder="you@company.nl"
+                placeholder="e.g., you@example.com"
               />
             </div>
           </div>
@@ -142,7 +142,8 @@ export function ContactForm({
               name="message"
               disabled={submitting}
               className="mt-2 w-full resize-y rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-accent focus:outline-none disabled:opacity-60"
-              placeholder="Tell us what you're trying to figure out…"
+              placeholder="Type your inquiry or describe your current sick leave situation here...
+"
             />
           </div>
 

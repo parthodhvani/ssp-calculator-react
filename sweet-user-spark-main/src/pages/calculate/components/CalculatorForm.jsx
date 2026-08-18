@@ -199,7 +199,7 @@ export function CalculatorForm({ content, form, estimate, onEmailSent }) {
 
         <FormField
           label={`${calc.emailLabel || "Email address"} *`}
-          hint={calc.emailHint || "We'll send your entitlement estimate here."}
+          hint={calc.emailHint || "We will securely deliver a permanent link to your calculation breakdown here."}
           className="sm:col-span-2"
         >
           <div className="relative">

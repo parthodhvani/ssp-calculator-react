@@ -13,11 +13,11 @@ import { StatRow } from "@/components/shared/StatRow";
 import { formatTemplate, resolveHref } from "../content";
 
 const LOCKED_ROW_LABELS = [
-  "Total entitlement period",
-  "Used so far",
-  "Remaining entitlement",
-  "Current payment period",
-  "Waiting period",
+  "Total legal protection window",
+  "Absence days used to date",
+  "Remaining statutory balance",
+  "Current ongoing payment cycle",
+  "Waiting days/salary deduction period",
 ];
 
 function LockedResultPanel({ kicker }) {
@@ -35,9 +35,9 @@ function LockedResultPanel({ kicker }) {
           <Lock className="h-5 w-5 text-primary-foreground/70" />
         </div>
         <p className="mt-4 text-sm font-medium text-primary-foreground">
-         Your personalized entitlement estimate will appear here.</p>
+         Your personalized legal breakdown will generate here.</p>
         <p className="mt-1.5 max-w-[26ch] text-xs leading-relaxed text-primary-foreground/70">
-        To view your results, complete all required fields, click <b>"Calculate My Entitlement," </b>and confirm that you'd like to receive your estimate by email.
+         Complete all required form attributes on the left, click <b>"Calculate My Entitlement," </b> and verify your email to instantly unlock your statutory pay projections.
         </p>
       </div>
 

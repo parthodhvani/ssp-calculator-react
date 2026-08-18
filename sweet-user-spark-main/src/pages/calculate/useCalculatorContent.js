@@ -72,6 +72,9 @@ export function mapAcfResponseToContent(acf) {
   const resultG = group(acf, "result");
   const howSecG = group(acf, "how_it_works_section");
   const policyG = group(acf, "policy_cta");
+  const informaticsSectionG = group(acf, "informatics_section");
+  const informaticsExampleG = group(acf, "informatics_example");
+  const informaticsTableLabelsG = group(acf, "informatics_table_labels");
 
   // ── Hero ────────────────────────────────────────────────────────────────
   if (
@@ -518,6 +521,101 @@ export function mapAcfResponseToContent(acf) {
     content.disclaimer = str(acf.disclaimer_text, "");
   }
 
+  // ── Informatics / "How we calculate" transparency section ───────────────
+  if (
+    informaticsSectionG ||
+    acf.informatics_kicker ||
+    acf.informatics_title
+  ) {
+    content.informaticsSection = {
+      kicker: str(
+        first(informaticsSectionG?.kicker, acf.informatics_kicker),
+        "",
+      ),
+      title: str(first(informaticsSectionG?.title, acf.informatics_title), ""),
+      description: str(
+        first(informaticsSectionG?.description, acf.informatics_description),
+        "",
+      ),
+    };
+  }
+
+  if (Array.isArray(acf.informatics_steps) && acf.informatics_steps.length > 0) {
+    content.informaticsSteps = acf.informatics_steps.map((row) => ({
+      icon: first(row.icon, row.step_icon) ?? "",
+      title: first(row.title, row.step_title) ?? "",
+      description: first(row.description, row.step_description) ?? "",
+    }));
+  }
+
+  if (
+    informaticsExampleG ||
+    acf.informatics_example_heading ||
+    acf.informatics_sample_salary != null
+  ) {
+    content.informaticsExample = {
+      heading: str(
+        first(informaticsExampleG?.heading, acf.informatics_example_heading),
+        "",
+      ),
+      sampleSalary: num(
+        first(informaticsExampleG?.sample_salary, acf.informatics_sample_salary),
+        0,
+      ),
+      intro: str(
+        first(informaticsExampleG?.intro, acf.informatics_example_intro),
+        "",
+      ),
+      totalLabel: str(
+        first(
+          informaticsExampleG?.total_label,
+          acf.informatics_example_total_label,
+        ),
+        "",
+      ),
+    };
+  }
+
+  if (
+    informaticsTableLabelsG ||
+    acf.informatics_col_period ||
+    acf.informatics_col_duration ||
+    acf.informatics_col_pay
+  ) {
+    content.informaticsTableLabels = {
+      colPeriod: str(
+        first(informaticsTableLabelsG?.col_period, acf.informatics_col_period),
+        "",
+      ),
+      colDuration: str(
+        first(
+          informaticsTableLabelsG?.col_duration,
+          acf.informatics_col_duration,
+        ),
+        "",
+      ),
+      colPay: str(
+        first(informaticsTableLabelsG?.col_pay, acf.informatics_col_pay),
+        "",
+      ),
+    };
+  }
+
+  if (acf.informatics_faq_heading) {
+    content.informaticsFaqHeading = str(acf.informatics_faq_heading, "");
+  }
+
+  if (Array.isArray(acf.informatics_faqs) && acf.informatics_faqs.length > 0) {
+    content.informaticsFaqs = acf.informatics_faqs.map((row) => ({
+      question: first(row.question, row.faq_question) ?? "",
+      answer: first(row.answer, row.faq_answer) ?? "",
+    }));
+  }
+
+  if (acf.informatics_footer_text) {
+    content.informaticsFooterText = str(acf.informatics_footer_text, "");
+  }
+
   return content;
 }
 
@@ -612,6 +710,26 @@ function finalizeContent(mapped) {
       link: "",
     },
     disclaimer: mapped.disclaimer ?? "",
+    informaticsSection: mapped.informaticsSection ?? {
+      kicker: "",
+      title: "",
+      description: "",
+    },
+    informaticsSteps: mapped.informaticsSteps ?? [],
+    informaticsExample: mapped.informaticsExample ?? {
+      heading: "",
+      sampleSalary: 0,
+      intro: "",
+      totalLabel: "",
+    },
+    informaticsTableLabels: mapped.informaticsTableLabels ?? {
+      colPeriod: "",
+      colDuration: "",
+      colPay: "",
+    },
+    informaticsFaqHeading: mapped.informaticsFaqHeading ?? "",
+    informaticsFaqs: mapped.informaticsFaqs ?? [],
+    informaticsFooterText: mapped.informaticsFooterText ?? "",
   };
 }
 
