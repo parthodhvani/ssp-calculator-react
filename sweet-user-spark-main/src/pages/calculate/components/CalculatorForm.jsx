@@ -199,7 +199,7 @@ export function CalculatorForm({ content, form, estimate, onEmailSent }) {
 
         <FormField
           label={`${calc.emailLabel || "Email address"} *`}
-          hint={calc.emailHint || "We will securely deliver a permanent link to your calculation breakdown here."}
+          hint={calc.emailHint || "We'll send your entitlement estimate here."}
           className="sm:col-span-2"
         >
           <div className="relative">
@@ -255,7 +255,7 @@ export function CalculatorForm({ content, form, estimate, onEmailSent }) {
                 }`}
             >
               <RadioGroupItem value="employee" className="sr-only" />
-              Employee
+              Salaried Employee
             </label>
             <label
               className={`flex cursor-pointer items-center justify-center gap-2 rounded-md border px-4 py-2.5 text-sm font-medium transition-colors ${employmentType === "zzp"
@@ -264,7 +264,7 @@ export function CalculatorForm({ content, form, estimate, onEmailSent }) {
                 }`}
             >
               <RadioGroupItem value="zzp" className="sr-only" />
-              Self-employed (ZZP)
+              Self-employed (ZZP/Freelancer)
             </label>
           </RadioGroup>
         </FormField>
