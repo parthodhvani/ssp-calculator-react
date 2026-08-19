@@ -3,8 +3,7 @@ import { RulesPage } from "@/pages/rules/RulesPage";
 
 export const Route = createFileRoute("/rules")({
   head: () => ({
-    meta: [
-      { title: "Rules — Recura" },
+   meta: [
       {
         name: "description",
         content:

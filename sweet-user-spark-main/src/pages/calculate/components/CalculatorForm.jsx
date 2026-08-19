@@ -354,7 +354,7 @@ export function CalculatorForm({ content, form, estimate, onEmailSent }) {
 
         {/* ZZP informational block */}
         {employmentType === "zzp" && (
-          <div className="sm:col-span-2 rounded-lg border border-border bg-secondary/40 p-4">
+          <div className="sm:col-span-2 min-w-0 rounded-lg border border-border bg-secondary/40 p-4">
             <h4 className="text-sm font-medium text-foreground">
               Self-employed (ZZP) workers in the Netherlands are generally not entitled to employer-paid sick leave.
             </h4>
@@ -364,7 +364,7 @@ export function CalculatorForm({ content, form, estimate, onEmailSent }) {
             <Button
               type="button"
               variant="outline"
-              className="mt-3"
+              className="mt-3 h-auto w-full whitespace-normal py-2 text-center leading-snug sm:w-auto"
               onClick={() => {
                 window.open("https://www.uwv.nl/en/individuals/sickness-benefit", "_blank", "noopener,noreferrer");
               }}

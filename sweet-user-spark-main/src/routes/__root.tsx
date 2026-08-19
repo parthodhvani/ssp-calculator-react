@@ -190,8 +190,7 @@ export const Route =
           content: "width=device-width, initial-scale=1",
         },
         {
-          title:
-            "Recura — Netherlands sick leave, calculated properly",
+          title: "SSP Calculator",
         },
         {
           name: "description",
@@ -223,6 +222,11 @@ export const Route =
       ],
 
       links: [
+        {
+          rel: "icon",
+          type: "image/jpeg",
+          href: "https://devwp1.websiteserverhost.biz/ssp-calculator/wp-content/uploads/2026/08/images-2.jpg",
+        },
         {
           rel: "stylesheet",
           href: appCss,
@@ -373,9 +377,7 @@ function RootComponent() {
   /* Dynamic Header Text                                                      */
   /* ------------------------------------------------------------------------ */
 
-  const headerText =
-    siteSettings?.site_header ||
-    "Reference · Statutory Sick-Pay Law";
+  const headerText = siteSettings?.site_header || "SSP Calculator";
 
   /* ------------------------------------------------------------------------ */
   /* Render                                                                   */

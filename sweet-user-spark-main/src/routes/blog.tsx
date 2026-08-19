@@ -1,15 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { BlogPage } from "@/pages/blog/BlogPage";
+import { RulesPage } from "@/pages/rules/RulesPage";
 
 export const Route = createFileRoute("/blog")({
   head: () => ({
     meta: [
-      { title: "Blog — Recura" },
       {
         name: "description",
-        content: "Notes on Dutch sick-leave law, CAOs and payroll edge cases.",
+        content:
+          "The Dutch statutory rules Recura applies: Art. 7:629, waiting days, and the 104-week limit.",
       },
     ],
   }),
-  component: BlogPage,
+  component: RulesPage,
 });

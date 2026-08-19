@@ -192,25 +192,10 @@ export function AppSidebar() {
               LOGO
           ============================== */}
 
-          {logoLoading ? (
-            <div
-              className="
-                shrink-0
-                animate-pulse
-                rounded-md
-                bg-sidebar-accent
-              "
-              style={{
-                width: "auto",
-                height: "auto",
-                minWidth: "16px",
-                minHeight: "16px",
-              }}
-            />
-          ) : headerLogo && !logoError ? (
+          {headerLogo && !logoError ? (
             <img
               src={headerLogo}
-              alt="Recura"
+              alt="SSP Calculator"
               className="
                 block
                 shrink-0
@@ -240,23 +225,18 @@ export function AppSidebar() {
               }}
             />
           ) : (
-            <span
+            <img
+              src="https://devwp1.websiteserverhost.biz/ssp-calculator/wp-content/uploads/2026/08/images-2.jpg"
+              alt="SSP Calculator"
               className="
-                grid
-                h-8
-                w-8
+                block
                 shrink-0
-                place-items-center
                 rounded-md
-                bg-sidebar-primary
-                font-serif
-                text-sm
-                font-bold
-                text-sidebar-primary-foreground
+                object-contain
               "
-            >
-              R
-            </span>
+              loading="eager"
+              decoding="async"
+            />
           )}
         </Link>
       </SidebarHeader>
