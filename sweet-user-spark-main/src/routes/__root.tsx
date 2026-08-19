@@ -52,7 +52,7 @@ type SiteSettings = {
 };
 
 /* -------------------------------------------------------------------------- */
-/* Fetch Site Settings from WordPress Page 130                                */
+/* Fetch Site Settings from WordPress Page                                    */
 /* -------------------------------------------------------------------------- */
 
 async function fetchSiteSettings(): Promise<SiteSettings | null> {
@@ -290,12 +290,12 @@ function RootComponent() {
   /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
-    let mounted = true;
+    let isMounted = true;
 
     const loadSiteSettings = async () => {
       const settings = await fetchSiteSettings();
 
-      if (mounted && settings) {
+      if (isMounted) {
         setSiteSettings(settings);
       }
     };
@@ -303,9 +303,21 @@ function RootComponent() {
     loadSiteSettings();
 
     return () => {
-      mounted = false;
+      isMounted = false;
     };
   }, []);
+
+  /* ------------------------------------------------------------------------ */
+  /* Dynamic Browser Tab Title                                                */
+  /* ------------------------------------------------------------------------ */
+
+  useEffect(() => {
+    if (!siteSettings?.site_header) {
+      return;
+    }
+
+    document.title = siteSettings.site_header;
+  }, [siteSettings?.site_header]);
 
   /* ------------------------------------------------------------------------ */
   /* Dynamic Favicon                                                          */
@@ -327,7 +339,7 @@ function RootComponent() {
       icon.remove();
     });
 
-    /* Create favicon */
+    /* Create dynamic favicon */
     const favicon = document.createElement("link");
 
     favicon.rel = "icon";
@@ -351,6 +363,7 @@ function RootComponent() {
 
     document.head.appendChild(favicon);
 
+    /* Cleanup */
     return () => {
       favicon.remove();
     };
